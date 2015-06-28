@@ -2,7 +2,7 @@ var config = require('../config')
 var request = require('request');
 
 module.exports = function (io) { 
-	var twitchData = {};
+	var twitchData = null;
 	
 	// These will be static save the options url
 	var headers = {
@@ -21,16 +21,16 @@ module.exports = function (io) {
 	
 	twitchSocket.on('connection', function (socket) {
 		// Get 10 random streams for the initial data
-		updateData(10);
+		if (!twitchData)
+			refreshData(10);		
 		
-		
-		
-		socket.on('update data', function (msg) {
-			updateData(10);
+		// Refresh data when requested
+		socket.on('refresh data', function (msg) {
+			refreshData(msg.batchSize);
 		});
 		
-		// Pulls new data from Twitch and updates data store
-		function updateData(batchSize) {
+		// Pulls new data from Twitch
+		function refreshData(batchSize) {
 			batchSize = batchSize || 1;
 			
 			options.url = config.twitchApiRoot + '/beta/streams/random';
@@ -39,11 +39,19 @@ module.exports = function (io) {
 				if (!error && response.statusCode === 200) {
 	        var twitchResponse = JSON.parse(body);
 					twitchResponse = twitchResponse.slice(0, batchSize);
-					
-	        // TODO: Push data to data store
-					console.log(twitchResponse);
+					processTwitchResponse(twitchResponse);
 	      }
 			});
 		}
+		
+		// Process Twitch response array into a format that fits the app
+		function processTwitchResponse(response) {
+			var data = response.map(function (stream) {
+				return stream;
+			});
+			
+			twitchData = data;
+			twitchSocket.emit('data updated', twitchData);
+		};
 	});
 };
