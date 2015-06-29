@@ -19819,9 +19819,57 @@ React.render(
 	document.getElementById('app-mount')
 );
 
-},{"./components/ScouterApp.react":158,"react":156}],158:[function(require,module,exports){
+},{"./components/ScouterApp.react":160,"react":156}],158:[function(require,module,exports){
 var React = require('react');
-var StreamProfile = require('./StreamProfile.react');
+var SmallChannel = require('./SmallChannel.react');
+
+var ChannelList = React.createClass({displayName: "ChannelList",
+	getDefaultProps: function () {
+		return {
+			data: []	
+		};
+	},
+	
+	render: function () {
+		// Create a list of clickable SmallChannel components
+		var channels = this.props.data.map(function (channelData) {
+			return (
+				React.createElement(SmallChannel, {data: channelData, onChannelClick: this.props.onChannelClick})
+			);
+		}.bind(this));
+		return (
+			React.createElement("div", {className: "channelList"}, 
+				channels
+			)
+		);
+	}
+});
+
+module.exports = ChannelList;
+
+},{"./SmallChannel.react":161,"react":156}],159:[function(require,module,exports){
+var React = require('react');
+
+var ComparisonContainer = React.createClass({displayName: "ComparisonContainer",
+	getDefaultProps: function () {
+		return {
+			data: { game: 'loading...' },	
+		};
+	},
+	
+	render: function () {
+		return (
+			React.createElement("div", null, this.props.data.game)
+		);
+	}
+});
+
+module.exports = ComparisonContainer;
+
+},{"react":156}],160:[function(require,module,exports){
+var React = require('react');
+var ComparisonContainer = require('./ComparisonContainer.react');
+var ChannelList = require('./ChannelList.react');
 
 var ScouterApp = React.createClass({displayName: "ScouterApp",
 	getInitialState: function () {
@@ -19837,43 +19885,63 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 		this.requestUpdate();
 	},
 
+	handleChannelClick: function (id) {
+
+	},
+
 	requestUpdate: function () {
+		// Emit a request to the twitch socket to push new data to be rendered
 		this.props.socket.emit('request update');
 	},
 
 	render: function () {
-		var profiles = this.state.data.map(function (streamData) {
-			return(
-				React.createElement(StreamProfile, {key: streamData._id, data: streamData})
-			);
+		// Create an array of data that will be used by the ChannelList
+		var listData = this.state.data.map(function (streamData) {
+			return {
+				imgUrl: streamData.channel.logo,
+				streamId: streamData._id
+			};
 		});
 		return (
-			React.createElement("div", {className: "profileContainer"}, 
-				profiles
-			)
+			React.createElement("div", {className: "scouterApp"}, 
+				React.createElement(ComparisonContainer, {data: this.state.data}), 
+				React.createElement(ChannelList, {data: listData, onChannelClick: this.handleChannelClick})
+			)		
 		);
 	}
 });
 
 module.exports = ScouterApp;
 
-},{"./StreamProfile.react":159,"react":156}],159:[function(require,module,exports){
+},{"./ChannelList.react":158,"./ComparisonContainer.react":159,"react":156}],161:[function(require,module,exports){
 var React = require('react');
 
-var StreamProfile = React.createClass({displayName: "StreamProfile",
+var SmallChannel = React.createClass({displayName: "SmallChannel",
 	getDefaultProps: function () {
 		return {
-			data: { game: 'loading...' },	
+			data: { 
+				imgUrl: 'http://gaymerx.com/wp-content/uploads/2013/05/Question-Block.png',
+				streamId: 0
+			}
 		};
+	},
+
+	handleClick: function (e) {
+		e.preventDefault();
+
+		// Call the passed-in click handler with the streamId
+		this.props.onChannelClick(this.props.streamId);
 	},
 	
 	render: function () {
 		return (
-			React.createElement("div", null, this.props.data.game)
+			React.createElement("div", {className: "smallChannel", onClick: this.handleClick, ref: this.props.data.streamId}, 
+				React.createElement("img", {src: this.props.data.imgUrl})
+			)
 		);
 	}
 });
 
-module.exports = StreamProfile;
+module.exports = SmallChannel;
 
 },{"react":156}]},{},[157]);
