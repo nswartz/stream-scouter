@@ -9,17 +9,14 @@ module.exports = function (io) {
 	  'Accept': 'application/vnd.twitchtv.v3+json',
 	  'Client-Id': config.twitchClientId
   };
-		
-  var options = {
-    url: '',
-    method: 'GET',
-    headers: headers
-  };
-	
+
 	// Namespace all activity for this socket
 	var twitchSocket = io.of('/twitch');
 	
 	twitchSocket.on('connection', function (socket) {
+		// Log the connection
+		console.log('new twitch socket connected: ');
+		
 		// Get 10 random streams for the initial data
 		if (!twitchData)
 			refreshData(10);		
@@ -29,16 +26,24 @@ module.exports = function (io) {
 			refreshData(msg.batchSize);
 		});
 		
+		socket.on('request update', function () {
+			twitchSocket.emit('update client', twitchData);
+		});
+		
 		// Pulls new data from Twitch
 		function refreshData(batchSize) {
 			batchSize = batchSize || 1;
 			
-			options.url = config.twitchApiRoot + '/beta/streams/random';
+			var options = {
+		    url: config.twitchApiRoot + '/beta/streams/random',
+		    method: 'GET',
+		    headers: headers
+		  };
 			
 			request(options, function (error, response, body) {
 				if (!error && response.statusCode === 200) {
 	        var twitchResponse = JSON.parse(body);
-					twitchResponse = twitchResponse.slice(0, batchSize);
+					twitchResponse = twitchResponse.streams.slice(0, batchSize);
 					processTwitchResponse(twitchResponse);
 	      }
 			});
@@ -46,12 +51,17 @@ module.exports = function (io) {
 		
 		// Process Twitch response array into a format that fits the app
 		function processTwitchResponse(response) {
-			var data = response.map(function (stream) {
-				return stream;
+			var data = response.map(function (streamObj) {
+				return streamObj;
 			});
 			
 			twitchData = data;
-			twitchSocket.emit('data updated', twitchData);
-		};
+			pushDataToClient();
+		}
+		
+		// Called when components need to be updated
+		function pushDataToClient() {
+			twitchSocket.emit('update client', twitchData);
+		}
 	});
 };

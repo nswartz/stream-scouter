@@ -2,14 +2,14 @@
 
 // Require dependencies
 var app = require('../app');
-var debug = require('debug')('stream-scouter:server');
+var debug = require('debug')('stream-scouter');
 
 // Set up sockets for the app
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 require('../sockets')(io);
 
-app.set('port', process.env.PORT || '3000');
+app.set('port', process.env.PORT || 3000);
 
 var server = http.listen(app.get('port'), function () {
   debug('Server listening on port ' + server.address().port);

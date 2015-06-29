@@ -1,8 +1,33 @@
 body {
-  padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
 a {
   color: #00B7FF;
 }
+
+#app-container {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  
+  background-color: #6441a5;
+}
+
+  #app-column {
+    width: 50%;
+    height: 100%;
+
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin: auto;
+    
+    background-color: white;
+  }
+
+  #app-container h1 {
+    font-size: 120px;
+  }

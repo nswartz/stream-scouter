@@ -19812,8 +19812,10 @@ module.exports = require('./lib/React');
 var React = require('react');
 var ScouterApp = require('./components/ScouterApp.react');
 
+var twitchSocket = io('/twitch');
+
 React.render(
-	React.createElement(ScouterApp, null),
+	React.createElement(ScouterApp, {socket: twitchSocket}),
 	document.getElementById('app-mount')
 );
 
@@ -19822,33 +19824,27 @@ var React = require('react');
 var StreamProfile = require('./StreamProfile.react');
 
 var ScouterApp = React.createClass({displayName: "ScouterApp",
-	updateChildren: function () {
-		// TODO: Request data from data store
-		this.setState({data: [{streamId: 00000, other: 'updated'}]});
-	},
 	getInitialState: function () {
-		// TODO: Request data from data store
-		return ({
-			data: [
-				{
-					streamId: 123,
-					other: 'component 1'
-				},
-				{
-					streamId: 456,
-					other: 'component 2'
-				},
-				{
-					streamId: 789,
-					other: 'component 3'
-				}
-			]
-		});
+		return { data: [] };
 	},
+	
+	componentWillMount: function () {	
+		// Set up our socket that will be used to refresh data		
+		this.props.socket.on('update client', function (data) {
+			this.setState({data: data});
+		}.bind(this));
+		// Request the Twitch data through the socket
+		this.requestUpdate();
+	},
+
+	requestUpdate: function () {
+		this.props.socket.emit('request update');
+	},
+
 	render: function () {
 		var profiles = this.state.data.map(function (streamData) {
 			return(
-				React.createElement(StreamProfile, {key: streamData.streamId, data: streamData})
+				React.createElement(StreamProfile, {key: streamData._id, data: streamData})
 			);
 		});
 		return (
@@ -19865,9 +19861,15 @@ module.exports = ScouterApp;
 var React = require('react');
 
 var StreamProfile = React.createClass({displayName: "StreamProfile",
+	getDefaultProps: function () {
+		return {
+			data: { game: 'loading...' },	
+		};
+	},
+	
 	render: function () {
 		return (
-			React.createElement("div", {className: this.props.key}, this.props.data.other)
+			React.createElement("div", null, this.props.data.game)
 		);
 	}
 });

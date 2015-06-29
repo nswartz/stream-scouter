@@ -3,8 +3,13 @@
   <head>
     <title>{{title}}</title>
     <link rel='stylesheet' href='/css/style.css' />
+    <script src="/socket.io/socket.io.js"></script>
   </head>
   <body>
-    {{{body}}}
+    <div id="app-container">
+      <div id="app-column">
+        {{{body}}}
+      </div>     
+    </div>
   </body>
 </html>
