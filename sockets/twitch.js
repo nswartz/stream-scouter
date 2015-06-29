@@ -61,6 +61,7 @@ module.exports = function (io) {
 				newO.logo = stream.channel.logo || 'http://gaymerx.com/wp-content/uploads/2013/05/Question-Block.png';
 				newO.url = stream.channel.url;
 				newO.partner = stream.channel.partner;
+				newO.mature = stream.channel.mature;
 				newO.views = stream.channel.views;
 				newO.followers = stream.channel.followers;
 				newO.selected = false;

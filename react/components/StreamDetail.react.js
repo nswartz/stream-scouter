@@ -1,16 +1,22 @@
 var React = require('react');
+var StreamProfile = require('./StreamProfile.react');
+var StatBar = require('./StatBar.react');
+var StatGem = require('./StatGem.react');
 
 var StreamDetail = React.createClass({
 	getDefaultProps: function () {
 		return {
-			data: {},	
+			data: {},
+			className: 'right'
 		};
 	},
 	
 	render: function () {
-		var str = JSON.stringify(this.props.data, null, 2);
+		var className = 'streamDetail ' + this.props.className;
 		return (
-			<div>{str}</div>
+			<div className={className}>
+				{className}
+			</div>
 		);
 	}
 });

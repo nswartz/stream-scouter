@@ -9,10 +9,13 @@ var StreamComparer = React.createClass({
 	},
 	
 	render: function () {
-		// Render 0-2 detail views depending on selected
+		// Render 0-2 detail views
+		var count = 0;
 		var detailViews = this.props.data.map(function (streamData) {
+			count++;
+			var className = count == 1 ? 'right' : 'left';
 			return (
-				<StreamDetail data={streamData} />
+					<StreamDetail className={className} key={streamData.id} data={streamData} />
 			);
 		});
 		return (
