@@ -19819,61 +19819,17 @@ React.render(
 	document.getElementById('app-mount')
 );
 
-},{"./components/ScouterApp.react":160,"react":156}],158:[function(require,module,exports){
+},{"./components/ScouterApp.react":158,"react":156}],158:[function(require,module,exports){
 var React = require('react');
-var SmallChannel = require('./SmallChannel.react');
-
-var ChannelList = React.createClass({displayName: "ChannelList",
-	getDefaultProps: function () {
-		return {
-			data: []	
-		};
-	},
-	
-	render: function () {
-		// Create a list of clickable SmallChannel components
-		var channels = this.props.data.map(function (channelData) {
-			return (
-				React.createElement(SmallChannel, {data: channelData, onChannelClick: this.props.onChannelClick})
-			);
-		}.bind(this));
-		return (
-			React.createElement("div", {className: "channelList"}, 
-				channels
-			)
-		);
-	}
-});
-
-module.exports = ChannelList;
-
-},{"./SmallChannel.react":161,"react":156}],159:[function(require,module,exports){
-var React = require('react');
-
-var ComparisonContainer = React.createClass({displayName: "ComparisonContainer",
-	getDefaultProps: function () {
-		return {
-			data: { game: 'loading...' },	
-		};
-	},
-	
-	render: function () {
-		return (
-			React.createElement("div", null, this.props.data.game)
-		);
-	}
-});
-
-module.exports = ComparisonContainer;
-
-},{"react":156}],160:[function(require,module,exports){
-var React = require('react');
-var ComparisonContainer = require('./ComparisonContainer.react');
-var ChannelList = require('./ChannelList.react');
+var StreamComparer = require('./StreamComparer.react');
+var StreamList = require('./StreamList.react');
 
 var ScouterApp = React.createClass({displayName: "ScouterApp",
 	getInitialState: function () {
-		return { data: [] };
+		return { 
+			data: [], 
+			selected: [] 
+		};
 	},
 	
 	componentWillMount: function () {	
@@ -19885,8 +19841,23 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 		this.requestUpdate();
 	},
 
-	handleChannelClick: function (id) {
+	handleChannelClick: function (streamId) {
+		// Update the StreamComparer props with the selected stream's data
+		if (this.state.selected.length < 2) {
+			// Find the stream data for the given streamId
+			var streamData = null;
+			for (var i=0; i<this.state.data.length; i++) {
+				// The streamId from Twitch should be unique, so just return the item
+				if (this.state.data[i]._id === streamId) {
+					streamData = this.state.data[i];
+					break;
+				}
+			}
 
+			// 'push' the new stream data to our list of selected streams
+			if (streamData)	
+				this.setState({selected: this.state.selected.concat(streamData)});
+		}
 	},
 
 	requestUpdate: function () {
@@ -19895,7 +19866,7 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 	},
 
 	render: function () {
-		// Create an array of data that will be used by the ChannelList
+		// Create an array of data that will be used by the StreamList
 		var listData = this.state.data.map(function (streamData) {
 			return {
 				imgUrl: streamData.channel.logo,
@@ -19904,8 +19875,8 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 		});
 		return (
 			React.createElement("div", {className: "scouterApp"}, 
-				React.createElement(ComparisonContainer, {data: this.state.data}), 
-				React.createElement(ChannelList, {data: listData, onChannelClick: this.handleChannelClick})
+				React.createElement(StreamComparer, {selected: this.state.selected}), 
+				React.createElement(StreamList, {data: listData, onChannelClick: this.handleChannelClick})
 			)		
 		);
 	}
@@ -19913,13 +19884,13 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 
 module.exports = ScouterApp;
 
-},{"./ChannelList.react":158,"./ComparisonContainer.react":159,"react":156}],161:[function(require,module,exports){
+},{"./StreamComparer.react":160,"./StreamList.react":162,"react":156}],159:[function(require,module,exports){
 var React = require('react');
 
-var SmallChannel = React.createClass({displayName: "SmallChannel",
+var SmallStream = React.createClass({displayName: "SmallStream",
 	getDefaultProps: function () {
-		return {
-			data: { 
+		return { 
+			data: {
 				imgUrl: 'http://gaymerx.com/wp-content/uploads/2013/05/Question-Block.png',
 				streamId: 0
 			}
@@ -19930,18 +19901,95 @@ var SmallChannel = React.createClass({displayName: "SmallChannel",
 		e.preventDefault();
 
 		// Call the passed-in click handler with the streamId
-		this.props.onChannelClick(this.props.streamId);
+		this.props.onChannelClick(this.props.data.streamId);
 	},
 	
 	render: function () {
 		return (
-			React.createElement("div", {className: "smallChannel", onClick: this.handleClick, ref: this.props.data.streamId}, 
+			React.createElement("div", {className: "smallStream", onClick: this.handleClick}, 
 				React.createElement("img", {src: this.props.data.imgUrl})
 			)
 		);
 	}
 });
 
-module.exports = SmallChannel;
+module.exports = SmallStream;
 
-},{"react":156}]},{},[157]);
+},{"react":156}],160:[function(require,module,exports){
+var React = require('react');
+var StreamDetail = require('./StreamDetail.react');
+
+var StreamComparer = React.createClass({displayName: "StreamComparer",
+	getDefaultProps: function () {
+		return {
+			selected: [],	
+		};
+	},
+	
+	render: function () {
+		// Render 0-2 detail views depending on selected
+		var detailViews = this.props.selected.map(function (streamData) {
+			return (
+				React.createElement(StreamDetail, {data: streamData})
+			);
+		});
+		return (
+			React.createElement("div", {className: "streamComparer"}, 
+				detailViews
+			)
+		);
+	}
+});
+
+module.exports = StreamComparer;
+
+},{"./StreamDetail.react":161,"react":156}],161:[function(require,module,exports){
+var React = require('react');
+
+var StreamDetail = React.createClass({displayName: "StreamDetail",
+	getDefaultProps: function () {
+		return {
+			data: {},	
+		};
+	},
+	
+	render: function () {
+		var str = JSON.stringify(this.props.data, null, 2);
+		return (
+			React.createElement("div", null, str)
+		);
+	}
+});
+
+module.exports = StreamDetail;
+
+},{"react":156}],162:[function(require,module,exports){
+var React = require('react');
+var SmallStream = require('./SmallStream.react');
+
+var StreamList = React.createClass({displayName: "StreamList",
+	getDefaultProps: function () {
+		return {
+			data: []	
+		};
+	},
+	
+	render: function () {
+		// Create a list of clickable SmallStream components
+		var channels = this.props.data.map(function (channelData) {
+			var key = 'smallStream' + channelData.streamId;
+			return (
+				React.createElement(SmallStream, {key: key, data: channelData, onChannelClick: this.props.onChannelClick})
+			);
+		}.bind(this));
+		return (
+			React.createElement("div", {className: "streamList"}, 
+				channels
+			)
+		);
+	}
+});
+
+module.exports = StreamList;
+
+},{"./SmallStream.react":159,"react":156}]},{},[157]);

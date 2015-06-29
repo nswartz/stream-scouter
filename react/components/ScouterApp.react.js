@@ -1,10 +1,13 @@
 var React = require('react');
-var ComparisonContainer = require('./ComparisonContainer.react');
-var ChannelList = require('./ChannelList.react');
+var StreamComparer = require('./StreamComparer.react');
+var StreamList = require('./StreamList.react');
 
 var ScouterApp = React.createClass({
 	getInitialState: function () {
-		return { data: [] };
+		return { 
+			data: [], 
+			selected: [] 
+		};
 	},
 	
 	componentWillMount: function () {	
@@ -16,8 +19,23 @@ var ScouterApp = React.createClass({
 		this.requestUpdate();
 	},
 
-	handleChannelClick: function (id) {
+	handleChannelClick: function (streamId) {
+		// Update the StreamComparer props with the selected stream's data
+		if (this.state.selected.length < 2) {
+			// Find the stream data for the given streamId
+			var streamData = null;
+			for (var i=0; i<this.state.data.length; i++) {
+				// The streamId from Twitch should be unique, so just return the item
+				if (this.state.data[i]._id === streamId) {
+					streamData = this.state.data[i];
+					break;
+				}
+			}
 
+			// 'push' the new stream data to our list of selected streams
+			if (streamData)	
+				this.setState({selected: this.state.selected.concat(streamData)});
+		}
 	},
 
 	requestUpdate: function () {
@@ -26,7 +44,7 @@ var ScouterApp = React.createClass({
 	},
 
 	render: function () {
-		// Create an array of data that will be used by the ChannelList
+		// Create an array of data that will be used by the StreamList
 		var listData = this.state.data.map(function (streamData) {
 			return {
 				imgUrl: streamData.channel.logo,
@@ -35,8 +53,8 @@ var ScouterApp = React.createClass({
 		});
 		return (
 			<div className='scouterApp'>
-				<ComparisonContainer data={this.state.data} />
-				<ChannelList data={listData} onChannelClick={this.handleChannelClick} />
+				<StreamComparer selected={this.state.selected} />
+				<StreamList data={listData} onChannelClick={this.handleChannelClick} />
 			</div>		
 		);
 	}

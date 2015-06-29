@@ -1,9 +1,9 @@
 var React = require('react');
 
-var SmallChannel = React.createClass({
+var SmallStream = React.createClass({
 	getDefaultProps: function () {
-		return {
-			data: { 
+		return { 
+			data: {
 				imgUrl: 'http://gaymerx.com/wp-content/uploads/2013/05/Question-Block.png',
 				streamId: 0
 			}
@@ -14,16 +14,16 @@ var SmallChannel = React.createClass({
 		e.preventDefault();
 
 		// Call the passed-in click handler with the streamId
-		this.props.onChannelClick(this.props.streamId);
+		this.props.onChannelClick(this.props.data.streamId);
 	},
 	
 	render: function () {
 		return (
-			<div className='smallChannel' onClick={this.handleClick} ref={this.props.data.streamId}>
+			<div className='smallStream' onClick={this.handleClick}>
 				<img src={this.props.data.imgUrl} />
 			</div>
 		);
 	}
 });
 
-module.exports = SmallChannel;
+module.exports = SmallStream;

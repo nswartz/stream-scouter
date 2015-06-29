@@ -19,7 +19,7 @@ a {
 }
 
   #app-column {
-    width: 50%;
+    width: 1100px;
     
     position: absolute;
     left: 0;
@@ -45,6 +45,17 @@ a {
       border-top-right-radius: 20px;
     }
     
-  .channelList {
+  .streamList {
     padding: 20px;
-  }
+  } 
+    .smallStream {
+      width: 250px;
+      height: 250px;
+      
+      border-radius: 20px;
+      overflow: hidden;      
+    }
+      .smallStream img {
+        max-width: 100%;
+        max-height: 100%;
+      }
