@@ -26,13 +26,13 @@ var ScouterApp = React.createClass({
 			var streamData = null;
 			for (var i=0; i<this.state.data.length; i++) {
 				// The streamId from Twitch should be unique, so just return the item
-				if (this.state.data[i]._id === streamId) {
+				if (this.state.data[i].id === streamId) {
 					streamData = this.state.data[i];
 					break;
 				}
 			}
 
-			// 'push' the new stream data to our list of selected streams
+			// Push the new stream data to our list of selected streams
 			if (streamData)	
 				this.setState({selected: this.state.selected.concat(streamData)});
 		}
@@ -47,8 +47,8 @@ var ScouterApp = React.createClass({
 		// Create an array of data that will be used by the StreamList
 		var listData = this.state.data.map(function (streamData) {
 			return {
-				imgUrl: streamData.channel.logo,
-				streamId: streamData._id
+				imgUrl: streamData.logo,
+				streamId: streamData.id
 			};
 		});
 		return (
