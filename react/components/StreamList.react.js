@@ -10,15 +10,14 @@ var StreamList = React.createClass({
 	
 	render: function () {
 		// Create a list of clickable SmallStream components
-		var channels = this.props.data.map(function (channelData) {
-			var key = 'smallStream' + channelData.streamId;
+		var streams = this.props.data.map(function (streamData) {
 			return (
-				<SmallStream key={key} data={channelData} onChannelClick={this.props.onChannelClick} />
+				<SmallStream key={streamData.streamId} data={streamData} onChannelClick={this.props.onChannelClick} />
 			);
 		}.bind(this));
 		return (
 			<div className='streamList'>
-				{channels}
+				{streams}
 			</div>
 		);
 	}

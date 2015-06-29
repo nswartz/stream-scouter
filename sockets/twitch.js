@@ -5,7 +5,7 @@ module.exports = function (io) {
 	var twitchData = null;
 	var grades = ['E', 'D', 'C', 'B', 'A', 'S'];
 	
-	// These will be static save the options url
+	// This will be static for the moment
 	var headers = {
 	  'Accept': 'application/vnd.twitchtv.v3+json',
 	  'Client-Id': config.twitchClientId
@@ -16,7 +16,7 @@ module.exports = function (io) {
 	
 	twitchSocket.on('connection', function (socket) {
 		// Log the connection
-		console.log('new twitch socket connected: ');
+		console.log('new twitch socket connected: ' + socket.handshake.address);
 		
 		// Get 10 random streams for the initial data
 		if (!twitchData)
@@ -63,6 +63,7 @@ module.exports = function (io) {
 				newO.partner = stream.channel.partner;
 				newO.views = stream.channel.views;
 				newO.followers = stream.channel.followers;
+				newO.selected = false;
 				newO.stats = {
 					viewers: normalizeData(stream.viewers, 'viewers'),
 					fps: normalizeData(stream.average_fps, 'fps'),

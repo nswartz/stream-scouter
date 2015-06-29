@@ -19827,8 +19827,7 @@ var StreamList = require('./StreamList.react');
 var ScouterApp = React.createClass({displayName: "ScouterApp",
 	getInitialState: function () {
 		return { 
-			data: [], 
-			selected: [] 
+			data: [] 
 		};
 	},
 	
@@ -19842,24 +19841,34 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 	},
 
 	handleChannelClick: function (streamId) {
-		// Update the StreamComparer props with the selected stream's data
-		if (this.state.selected.length < 2) {
-			// Find the stream data for the given streamId
-			var streamData = null;
-			for (var i=0; i<this.state.data.length; i++) {
-				// The streamId from Twitch should be unique, so just return the item
-				if (this.state.data[i].id === streamId) {
-					streamData = this.state.data[i];
-					break;
-				}
-			}
+		// Find the stream data for the given streamId
+		var streamData = this.cloneObject(this.state.data);
 
-			// Push the new stream data to our list of selected streams
-			if (streamData)	
-				this.setState({selected: this.state.selected.concat(streamData)});
+		// Find the index of the object clicked on (referenced by streamId)
+		var numSelected = 0;
+		var index = streamData.map(function (stream) {
+			// Because this iterates through the entire array, count selected streams
+			if (stream.selected)
+				numSelected++;
+
+			return stream.id;
+		}).indexOf(streamId);
+
+		// If the stream is selected, unselect it
+		// Otherwise select it as long as there are less than 2 already selected
+		if (streamData[index].selected) {
+			streamData[index].selected = false;
+		} else if (!streamData[index].selected && numSelected < 2) {
+			streamData[index].selected = true;
 		}
+
+		this.setState({data: streamData});
 	},
 
+	cloneObject: function (o) {
+		// This will return a correct deep copy if the object is composed of primitive values
+		return JSON.parse(JSON.stringify(o));
+	},
 	requestUpdate: function () {
 		// Emit a request to the twitch socket to push new data to be rendered
 		this.props.socket.emit('request update');
@@ -19870,12 +19879,16 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 		var listData = this.state.data.map(function (streamData) {
 			return {
 				imgUrl: streamData.logo,
-				streamId: streamData.id
+				streamId: streamData.id,
+				selected: streamData.selected
 			};
+		});
+		var compareData = this.state.data.filter(function (streamData) {
+			return streamData.selected;
 		});
 		return (
 			React.createElement("div", {className: "scouterApp"}, 
-				React.createElement(StreamComparer, {selected: this.state.selected}), 
+				React.createElement(StreamComparer, {data: compareData}), 
 				React.createElement(StreamList, {data: listData, onChannelClick: this.handleChannelClick})
 			)		
 		);
@@ -19892,7 +19905,8 @@ var SmallStream = React.createClass({displayName: "SmallStream",
 		return { 
 			data: {
 				imgUrl: 'http://gaymerx.com/wp-content/uploads/2013/05/Question-Block.png',
-				streamId: 0
+				streamId: 0,
+				selected: false
 			}
 		};
 	},
@@ -19905,8 +19919,10 @@ var SmallStream = React.createClass({displayName: "SmallStream",
 	},
 	
 	render: function () {
+		// Add a class to the element when it is selected
+		var className = this.props.data.selected ? 'smallStream selected' : 'smallStream';
 		return (
-			React.createElement("div", {className: "smallStream", onClick: this.handleClick}, 
+			React.createElement("div", {className: className, onClick: this.handleClick}, 
 				React.createElement("img", {src: this.props.data.imgUrl})
 			)
 		);
@@ -19922,13 +19938,13 @@ var StreamDetail = require('./StreamDetail.react');
 var StreamComparer = React.createClass({displayName: "StreamComparer",
 	getDefaultProps: function () {
 		return {
-			selected: [],	
+			data: [],	
 		};
 	},
 	
 	render: function () {
 		// Render 0-2 detail views depending on selected
-		var detailViews = this.props.selected.map(function (streamData) {
+		var detailViews = this.props.data.map(function (streamData) {
 			return (
 				React.createElement(StreamDetail, {data: streamData})
 			);
@@ -19976,15 +19992,14 @@ var StreamList = React.createClass({displayName: "StreamList",
 	
 	render: function () {
 		// Create a list of clickable SmallStream components
-		var channels = this.props.data.map(function (channelData) {
-			var key = 'smallStream' + channelData.streamId;
+		var streams = this.props.data.map(function (streamData) {
 			return (
-				React.createElement(SmallStream, {key: key, data: channelData, onChannelClick: this.props.onChannelClick})
+				React.createElement(SmallStream, {key: streamData.streamId, data: streamData, onChannelClick: this.props.onChannelClick})
 			);
 		}.bind(this));
 		return (
 			React.createElement("div", {className: "streamList"}, 
-				channels
+				streams
 			)
 		);
 	}

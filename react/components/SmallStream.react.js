@@ -5,7 +5,8 @@ var SmallStream = React.createClass({
 		return { 
 			data: {
 				imgUrl: 'http://gaymerx.com/wp-content/uploads/2013/05/Question-Block.png',
-				streamId: 0
+				streamId: 0,
+				selected: false
 			}
 		};
 	},
@@ -18,8 +19,10 @@ var SmallStream = React.createClass({
 	},
 	
 	render: function () {
+		// Add a class to the element when it is selected
+		var className = this.props.data.selected ? 'smallStream selected' : 'smallStream';
 		return (
-			<div className='smallStream' onClick={this.handleClick}>
+			<div className={className} onClick={this.handleClick}>
 				<img src={this.props.data.imgUrl} />
 			</div>
 		);

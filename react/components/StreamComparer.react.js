@@ -4,13 +4,13 @@ var StreamDetail = require('./StreamDetail.react');
 var StreamComparer = React.createClass({
 	getDefaultProps: function () {
 		return {
-			selected: [],	
+			data: [],	
 		};
 	},
 	
 	render: function () {
 		// Render 0-2 detail views depending on selected
-		var detailViews = this.props.selected.map(function (streamData) {
+		var detailViews = this.props.data.map(function (streamData) {
 			return (
 				<StreamDetail data={streamData} />
 			);
