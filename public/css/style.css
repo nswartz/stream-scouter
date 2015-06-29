@@ -1,5 +1,7 @@
 body {
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font: 32px "Open Sans", 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: bold;
+  color: white;
 }
 
 a {
@@ -13,21 +15,32 @@ a {
   left: 0;
   right: 0;
   
-  background-color: #6441a5;
+  background-color: white;
 }
 
   #app-column {
     width: 50%;
-    height: 100%;
-
+    
     position: absolute;
     left: 0;
     right: 0;
+    top: 10px;
+    bottom: 10px;
     margin: auto;
     
-    background-color: white;
+    background-color: #D9DDE0;
+    border-radius: 20px;
   }
-
-  #app-container h1 {
-    font-size: 120px;
-  }
+  
+    #app-header {
+      width: 100%;
+     
+      font-size: 120px; 
+      text-align: center;
+      
+      padding-top: 20px;
+      padding-bottom: 20px;   
+      background-color: #6441a5;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+    }
