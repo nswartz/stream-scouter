@@ -19815,181 +19815,346 @@ var ScouterApp = require('./components/ScouterApp.react');
 var twitchSocket = io('/twitch');
 
 React.render(
-	React.createElement(ScouterApp, {socket: twitchSocket}),
-	document.getElementById('app-mount')
+  React.createElement(ScouterApp, {socket: twitchSocket}),
+  document.getElementById('app-mount')
 );
 
-},{"./components/ScouterApp.react":158,"react":156}],158:[function(require,module,exports){
+},{"./components/ScouterApp.react":159,"react":156}],158:[function(require,module,exports){
+var React = require('react');
+
+var Indicator = React.createClass({displayName: "Indicator",
+  getDefaultProps: function () {
+    return {
+      label: '',
+      active: false 
+    };
+  },
+  
+  render: function () {
+    // A small indicator where the 'active' class corresponds to its props
+    var className = this.props.active ? 'indicator active' : 'indicator';
+    return (
+      React.createElement("div", {className: className})
+    );
+  }
+});
+
+module.exports = Indicator;
+
+},{"react":156}],159:[function(require,module,exports){
 var React = require('react');
 var StreamComparer = require('./StreamComparer.react');
 var StreamList = require('./StreamList.react');
 
 var ScouterApp = React.createClass({displayName: "ScouterApp",
-	getInitialState: function () {
-		return { 
-			data: [], 
-			selected: [] 
-		};
-	},
-	
-	componentWillMount: function () {	
-		// Set up our socket that will be used to refresh data		
-		this.props.socket.on('update client', function (data) {
-			this.setState({data: data});
-		}.bind(this));
-		// Request the Twitch data through the socket
-		this.requestUpdate();
-	},
+  getInitialState: function () {
+    return { 
+      data: [] 
+    };
+  },
+  
+  componentWillMount: function () { 
+    // Set up our socket that will be used to refresh data    
+    this.props.socket.on('update client', function (data) {
+      this.setState({data: data});
+    }.bind(this));
+    // Request the Twitch data through the socket
+    this.requestUpdate();
+  },
 
-	handleChannelClick: function (streamId) {
-		// Update the StreamComparer props with the selected stream's data
-		if (this.state.selected.length < 2) {
-			// Find the stream data for the given streamId
-			var streamData = null;
-			for (var i=0; i<this.state.data.length; i++) {
-				// The streamId from Twitch should be unique, so just return the item
-				if (this.state.data[i].id === streamId) {
-					streamData = this.state.data[i];
-					break;
-				}
-			}
+  handleChannelClick: function (streamId) {
+    // Find the stream data for the given streamId
+    var streamData = this.cloneObject(this.state.data);
 
-			// Push the new stream data to our list of selected streams
-			if (streamData)	
-				this.setState({selected: this.state.selected.concat(streamData)});
-		}
-	},
+    // Find the index of the object clicked on (referenced by streamId)
+    var numSelected = 0;
+    var index = streamData.map(function (stream) {
+      // Because this iterates through the entire array, count selected streams
+      if (stream.selected)
+        numSelected++;
 
-	requestUpdate: function () {
-		// Emit a request to the twitch socket to push new data to be rendered
-		this.props.socket.emit('request update');
-	},
+      return stream.id;
+    }).indexOf(streamId);
 
-	render: function () {
-		// Create an array of data that will be used by the StreamList
-		var listData = this.state.data.map(function (streamData) {
-			return {
-				imgUrl: streamData.logo,
-				streamId: streamData.id
-			};
-		});
-		return (
-			React.createElement("div", {className: "scouterApp"}, 
-				React.createElement(StreamComparer, {selected: this.state.selected}), 
-				React.createElement(StreamList, {data: listData, onChannelClick: this.handleChannelClick})
-			)		
-		);
-	}
+    // If the stream is selected, unselect it
+    // Otherwise select it as long as there are less than 2 already selected
+    if (streamData[index].selected) {
+      streamData[index].selected = false;
+    } else if (!streamData[index].selected && numSelected < 2) {
+      streamData[index].selected = true;
+    }
+
+    this.setState({data: streamData});
+  },
+
+  cloneObject: function (o) {
+    // This will return a correct deep copy if the object is composed of primitive values
+    return JSON.parse(JSON.stringify(o));
+  },
+  requestUpdate: function () {
+    // Emit a request to the twitch socket to push new data to be rendered
+    this.props.socket.emit('request update');
+  },
+
+  render: function () {
+    // Create an array of data that will be used by the StreamList
+    var listData = this.state.data.map(function (streamData) {
+      return {
+        imgUrl: streamData.logo,
+        streamId: streamData.id,
+        selected: streamData.selected
+      };
+    });
+    var compareData = this.state.data.filter(function (streamData) {
+      return streamData.selected;
+    });
+    return (
+      React.createElement("div", {className: "scouterApp"}, 
+        React.createElement(StreamComparer, {data: compareData}), 
+        React.createElement(StreamList, {data: listData, onChannelClick: this.handleChannelClick})
+      )    
+    );
+  }
 });
 
 module.exports = ScouterApp;
 
-},{"./StreamComparer.react":160,"./StreamList.react":162,"react":156}],159:[function(require,module,exports){
+},{"./StreamComparer.react":163,"./StreamList.react":165,"react":156}],160:[function(require,module,exports){
 var React = require('react');
 
 var SmallStream = React.createClass({displayName: "SmallStream",
-	getDefaultProps: function () {
-		return { 
-			data: {
-				imgUrl: 'http://gaymerx.com/wp-content/uploads/2013/05/Question-Block.png',
-				streamId: 0
-			}
-		};
-	},
+  getDefaultProps: function () {
+    return { 
+      data: {
+        imgUrl: 'http://gaymerx.com/wp-content/uploads/2013/05/Question-Block.png',
+        streamId: 0,
+        selected: false
+      }
+    };
+  },
 
-	handleClick: function (e) {
-		e.preventDefault();
+  handleClick: function (e) {
+    e.preventDefault();
 
-		// Call the passed-in click handler with the streamId
-		this.props.onChannelClick(this.props.data.streamId);
-	},
-	
-	render: function () {
-		return (
-			React.createElement("div", {className: "smallStream", onClick: this.handleClick}, 
-				React.createElement("img", {src: this.props.data.imgUrl})
-			)
-		);
-	}
+    // Call the passed-in click handler with the streamId
+    this.props.onChannelClick(this.props.data.streamId);
+  },
+  
+  render: function () {
+    // Add a class to the element when it is selected
+    var className = this.props.data.selected ? 'smallStream selected' : 'smallStream';
+    return (
+      React.createElement("div", {className: className, onClick: this.handleClick}, 
+        React.createElement("img", {src: this.props.data.imgUrl})
+      )
+    );
+  }
 });
 
 module.exports = SmallStream;
 
-},{"react":156}],160:[function(require,module,exports){
+},{"react":156}],161:[function(require,module,exports){
+var React = require('react');
+
+var StatBar = React.createClass({displayName: "StatBar",
+  getDefaultProps: function () {
+    return {
+      data: { 
+        score: 0,
+        grade: '',
+        label: '',
+        initialValue: 0
+      }
+    };
+  },
+  
+  render: function () {
+    // A representation of a given stat in a 'meter' format
+    return (
+      React.createElement("div", {className: "statBar"}, 
+        React.createElement("div", {className: "name"}, 
+          this.props.data.label
+        ), 
+        React.createElement("div", {className: "score"}, 
+          this.props.data.score
+        ), 
+        React.createElement("div", {className: "initialValue"}, 
+          this.props.data.initialValue
+        )
+      )
+    );
+  }
+});
+
+module.exports = StatBar;
+
+},{"react":156}],162:[function(require,module,exports){
+var React = require('react');
+
+var StatGem = React.createClass({displayName: "StatGem",
+  getDefaultProps: function () {
+    return {
+      data: {},
+      // These are the default stats used to construct a gem. Could be overwritten
+      stats: ['viewers', 'fps', 'resolution', 'duration', 'starPower']
+    };
+  },
+  
+  render: function () {
+    // A representation of a set of 5 stats given in a 'gem' format
+    var facets = this.props.stats.map(function (key) {
+      var stat = this.props.data[key];
+      return (
+        React.createElement("div", {className: "facet"}, 
+          React.createElement("div", {className: "name"}, 
+            stat.label
+          ), 
+          React.createElement("div", {className: "score"}, 
+            stat.score
+          ), 
+          React.createElement("div", {className: "grade"}, 
+            stat.grade
+          ), 
+          React.createElement("div", {className: "initialValue"}, 
+            stat.initialValue
+          )
+        )
+      );
+    }.bind(this));
+    return (
+      React.createElement("div", {className: "statGem"}, 
+        facets
+      )
+    );
+  }
+});
+
+module.exports = StatGem;
+
+},{"react":156}],163:[function(require,module,exports){
 var React = require('react');
 var StreamDetail = require('./StreamDetail.react');
 
 var StreamComparer = React.createClass({displayName: "StreamComparer",
-	getDefaultProps: function () {
-		return {
-			selected: [],	
-		};
-	},
-	
-	render: function () {
-		// Render 0-2 detail views depending on selected
-		var detailViews = this.props.selected.map(function (streamData) {
-			return (
-				React.createElement(StreamDetail, {data: streamData})
-			);
-		});
-		return (
-			React.createElement("div", {className: "streamComparer"}, 
-				detailViews
-			)
-		);
-	}
+  getDefaultProps: function () {
+    return {
+      data: [], 
+    };
+  },
+  
+  render: function () {
+    // Render 0-2 detail views
+    var count = 0;
+    var detailViews = this.props.data.map(function (streamData) {
+      count++;
+      var className = count == 1 ? 'right' : 'left';
+      return (
+          React.createElement(StreamDetail, {className: className, key: streamData.id, data: streamData})
+      );
+    });
+    return (
+      React.createElement("div", {className: "streamComparer"}, 
+        detailViews
+      )
+    );
+  }
 });
 
 module.exports = StreamComparer;
 
-},{"./StreamDetail.react":161,"react":156}],161:[function(require,module,exports){
+},{"./StreamDetail.react":164,"react":156}],164:[function(require,module,exports){
 var React = require('react');
+var StreamProfile = require('./StreamProfile.react');
+var StatBar = require('./StatBar.react');
+var StatGem = require('./StatGem.react');
 
 var StreamDetail = React.createClass({displayName: "StreamDetail",
-	getDefaultProps: function () {
-		return {
-			data: {},	
-		};
-	},
-	
-	render: function () {
-		var str = JSON.stringify(this.props.data, null, 2);
-		return (
-			React.createElement("div", null, str)
-		);
-	}
+  getDefaultProps: function () {
+    return {
+      data: {},
+      className: 'right'
+    };
+  },
+  
+  render: function () {
+    var className = 'streamDetail ' + this.props.className;
+    return (
+      React.createElement("div", {className: className}, 
+        React.createElement(StreamProfile, {data: this.props.data}), 
+        React.createElement(StatBar, {data: this.props.data.stats.views}), 
+        React.createElement(StatBar, {data: this.props.data.stats.followers}), 
+        React.createElement(StatGem, {data: this.props.data.stats})
+      )
+    );
+  }
 });
 
 module.exports = StreamDetail;
 
-},{"react":156}],162:[function(require,module,exports){
+},{"./StatBar.react":161,"./StatGem.react":162,"./StreamProfile.react":166,"react":156}],165:[function(require,module,exports){
 var React = require('react');
 var SmallStream = require('./SmallStream.react');
 
 var StreamList = React.createClass({displayName: "StreamList",
-	getDefaultProps: function () {
-		return {
-			data: []	
-		};
-	},
-	
-	render: function () {
-		// Create a list of clickable SmallStream components
-		var channels = this.props.data.map(function (channelData) {
-			var key = 'smallStream' + channelData.streamId;
-			return (
-				React.createElement(SmallStream, {key: key, data: channelData, onChannelClick: this.props.onChannelClick})
-			);
-		}.bind(this));
-		return (
-			React.createElement("div", {className: "streamList"}, 
-				channels
-			)
-		);
-	}
+  getDefaultProps: function () {
+    return {
+      data: []  
+    };
+  },
+  
+  render: function () {
+    // Create a list of clickable SmallStream components
+    var streams = this.props.data.map(function (streamData) {
+      return (
+        React.createElement(SmallStream, {key: streamData.streamId, data: streamData, onChannelClick: this.props.onChannelClick})
+      );
+    }.bind(this));
+    return (
+      React.createElement("div", {className: "streamList"}, 
+        streams
+      )
+    );
+  }
 });
 
 module.exports = StreamList;
 
-},{"./SmallStream.react":159,"react":156}]},{},[157]);
+},{"./SmallStream.react":160,"react":156}],166:[function(require,module,exports){
+var React = require('react');
+var Indicator = require('./Indicator.react');
+
+var StreamProfile = React.createClass({displayName: "StreamProfile",
+  getDefaultProps: function () {
+    return {
+      data: {}
+    };
+  },
+  
+  render: function () {
+    // The text-centric piece of the StreamDetail view
+    return (
+      React.createElement("div", {className: "streamProfile"}, 
+        React.createElement("div", {className: "logo"}, 
+          React.createElement("img", {src: this.props.data.logo})
+        ), 
+        React.createElement("div", {className: "name"}, 
+          this.props.data.name
+        ), 
+        React.createElement("div", {className: "game"}, 
+          this.props.data.game
+        ), 
+        React.createElement("div", {className: "url"}, 
+          this.props.data.url
+        ), 
+        React.createElement("div", null, 
+          React.createElement(Indicator, {label: "Partner", active: this.props.data.partner}), 
+          React.createElement(Indicator, {label: "Mature", active: this.props.data.mature})
+        )
+      )
+    );
+  }
+});
+
+module.exports = StreamProfile;
+
+},{"./Indicator.react":158,"react":156}]},{},[157]);
