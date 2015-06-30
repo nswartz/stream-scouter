@@ -1,26 +1,41 @@
 var React = require('react');
-var StreamDetail = require('./StreamDetail.react');
 
-var StreamComparer = React.createClass({
+var StatGem = React.createClass({
   getDefaultProps: function () {
     return {
-      data: [], 
+      data: {},
+      // These are the default stats used to construct a gem. Could be overwritten
+      stats: ['viewers', 'fps', 'resolution', 'duration', 'starPower']
     };
   },
   
   render: function () {
-    // Render 0-2 detail views depending on selected
-    var detailViews = this.props.data.map(function (streamData) {
+    // A representation of a set of 5 stats given in a 'gem' format
+    var facets = this.props.stats.map(function (key) {
+      var stat = this.props.data[key];
       return (
-        <StreamDetail key={streamData.id} data={streamData} />
+        <div className='facet'>
+          <div className='name'>
+            {this.props.data.label}
+          </div>
+          <div className='score'>
+            {this.props.data.score}
+          </div>
+          <div className='grade'>
+            {this.props.data.grade}
+          </div>
+          <div className='initialValue'>
+            {this.props.data.initialValue}
+          </div>
+        </div>
       );
-    });
+    }.bind(this));
     return (
-      <div className='streamComparer'>
-        {detailViews}
+      <div className='statGem'>
+        {facets}
       </div>
     );
   }
 });
 
-module.exports = StreamComparer;
+module.exports = StatGem;

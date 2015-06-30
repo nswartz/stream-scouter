@@ -62,14 +62,15 @@ module.exports = function (io) {
 				newO.url = stream.channel.url;
 				newO.partner = stream.channel.partner;
 				newO.mature = stream.channel.mature;
-				newO.views = stream.channel.views;
-				newO.followers = stream.channel.followers;
 				newO.selected = false;
 				newO.stats = {
-					viewers: normalizeData(stream.viewers, 'viewers'),
-					fps: normalizeData(stream.average_fps, 'fps'),
-					resolution: normalizeData(stream.video_height, 'resolution'),
-					duration: normalizeData(stream.created_at, 'duration')
+					viewers: normalizeData(stream.viewers, 'Viewers'),
+					fps: normalizeData(stream.average_fps, 'FPS'),
+					resolution: normalizeData(stream.video_height, 'Resolution'),
+					duration: normalizeData(stream.created_at, 'Duration'),
+					starPower: normalizeData(0, 'Star Power'),
+					views: normalizeData(stream.channel.views, 'Views'),
+					followers: normalizeData(stream.channel.followers, 'Followers')
 				};
 				
 				return newO;
@@ -84,23 +85,36 @@ module.exports = function (io) {
 			var score = 0;
 			
 			switch (dataType) {
-				case 'viewers':
+				case 'Viewers':
 					// 100 viewers seems reasonable for comparing random streams
 					score = data / 100;
 					break;
-				case 'fps':
+				case 'FPS':
 					// 60 fps is the obvious choice
 					score = data / 60;
 					break;
-				case 'resolution':
+				case 'Resolution':
 					// 1080p resolution is the best
 					score = data / 1080;
 					break;
-				case 'duration':
+				case 'Duration':
 					// 3 hour stream duration for maximum points
-					var maxTime = 3 * 60 * 60 * 1000;
+					var hour = 60 * 60 * 1000;
 					var duration = (new Date()).getTime() - Date.parse(data);
-					score = duration / maxTime;
+					data = data / hour;
+					score = duration / (3 * hour);
+					break;
+				case 'Star Power':
+					// Random value between [0,1) (I needed a 5th stat)
+					score = Math.random();
+					break;			
+				case 'Views':
+					// Page views are relatively easy to get
+					score = data / 50000;
+					break;		
+				case 'Followers':
+					// By contrast, followers are much more difficult
+					score = data / 5000;
 					break;
 				default:
 					score = 0;
@@ -114,7 +128,9 @@ module.exports = function (io) {
 			
 			return {
 				score: score,
-				grade: grades[Math.floor(score)]
+				grade: grades[Math.floor(score)],
+				label: dataType,
+				initialValue: data
 			};
 		}
 		

@@ -19954,36 +19954,84 @@ var SmallStream = React.createClass({displayName: "SmallStream",
 module.exports = SmallStream;
 
 },{"react":156}],161:[function(require,module,exports){
-
-},{}],162:[function(require,module,exports){
 var React = require('react');
-var StreamDetail = require('./StreamDetail.react');
 
-var StreamComparer = React.createClass({displayName: "StreamComparer",
+var StatBar = React.createClass({displayName: "StatBar",
   getDefaultProps: function () {
     return {
-      data: [], 
+      data: { 
+        score: 0,
+        grade: '',
+        label: '',
+        initialValue: 0
+      }
     };
   },
   
   render: function () {
-    // Render 0-2 detail views depending on selected
-    var detailViews = this.props.data.map(function (streamData) {
-      return (
-        React.createElement(StreamDetail, {key: streamData.id, data: streamData})
-      );
-    });
+    // A representation of a given stat in a 'meter' format
     return (
-      React.createElement("div", {className: "streamComparer"}, 
-        detailViews
+      React.createElement("div", {className: "statBar"}, 
+        React.createElement("div", {className: "name"}, 
+          this.props.data.label
+        ), 
+        React.createElement("div", {className: "score"}, 
+          this.props.data.score
+        ), 
+        React.createElement("div", {className: "initialValue"}, 
+          this.props.data.initialValue
+        )
       )
     );
   }
 });
 
-module.exports = StreamComparer;
+module.exports = StatBar;
 
-},{"./StreamDetail.react":164,"react":156}],163:[function(require,module,exports){
+},{"react":156}],162:[function(require,module,exports){
+var React = require('react');
+
+var StatGem = React.createClass({displayName: "StatGem",
+  getDefaultProps: function () {
+    return {
+      data: {},
+      // These are the default stats used to construct a gem. Could be overwritten
+      stats: ['viewers', 'fps', 'resolution', 'duration', 'starPower']
+    };
+  },
+  
+  render: function () {
+    // A representation of a set of 5 stats given in a 'gem' format
+    var facets = this.props.stats.map(function (key) {
+      var stat = this.props.data[key];
+      return (
+        React.createElement("div", {className: "facet"}, 
+          React.createElement("div", {className: "name"}, 
+            this.props.data.label
+          ), 
+          React.createElement("div", {className: "score"}, 
+            this.props.data.score
+          ), 
+          React.createElement("div", {className: "grade"}, 
+            this.props.data.grade
+          ), 
+          React.createElement("div", {className: "initialValue"}, 
+            this.props.data.initialValue
+          )
+        )
+      );
+    }.bind(this));
+    return (
+      React.createElement("div", {className: "statGem"}, 
+        facets
+      )
+    );
+  }
+});
+
+module.exports = StatGem;
+
+},{"react":156}],163:[function(require,module,exports){
 var React = require('react');
 var StreamDetail = require('./StreamDetail.react');
 
@@ -20032,7 +20080,10 @@ var StreamDetail = React.createClass({displayName: "StreamDetail",
 		var className = 'streamDetail ' + this.props.className;
 		return (
 			React.createElement("div", {className: className}, 
-				className
+				React.createElement(StreamProfile, {data: this.props.data}), 
+				React.createElement(StatBar, {data: this.props.data.views}), 
+				React.createElement(StatBar, {data: this.props.data.followers}), 
+				React.createElement(StatGem, {data: this.props.data.stats})
 			)
 		);
 	}
