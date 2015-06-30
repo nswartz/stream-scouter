@@ -20007,16 +20007,16 @@ var StatGem = React.createClass({displayName: "StatGem",
       return (
         React.createElement("div", {className: "facet"}, 
           React.createElement("div", {className: "name"}, 
-            this.props.data.label
+            stat.label
           ), 
           React.createElement("div", {className: "score"}, 
-            this.props.data.score
+            stat.score
           ), 
           React.createElement("div", {className: "grade"}, 
-            this.props.data.grade
+            stat.grade
           ), 
           React.createElement("div", {className: "initialValue"}, 
-            this.props.data.initialValue
+            stat.initialValue
           )
         )
       );
@@ -20081,8 +20081,8 @@ var StreamDetail = React.createClass({displayName: "StreamDetail",
     return (
       React.createElement("div", {className: className}, 
         React.createElement(StreamProfile, {data: this.props.data}), 
-        React.createElement(StatBar, {data: this.props.data.views}), 
-        React.createElement(StatBar, {data: this.props.data.followers}), 
+        React.createElement(StatBar, {data: this.props.data.stats.views}), 
+        React.createElement(StatBar, {data: this.props.data.stats.followers}), 
         React.createElement(StatGem, {data: this.props.data.stats})
       )
     );

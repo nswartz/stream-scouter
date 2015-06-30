@@ -16,8 +16,8 @@ var StreamDetail = React.createClass({
     return (
       <div className={className}>
         <StreamProfile data={this.props.data} />
-        <StatBar data={this.props.data.views} />
-        <StatBar data={this.props.data.followers} />
+        <StatBar data={this.props.data.stats.views} />
+        <StatBar data={this.props.data.stats.followers} />
         <StatGem data={this.props.data.stats} />
       </div>
     );

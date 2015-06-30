@@ -16,16 +16,16 @@ var StatGem = React.createClass({
       return (
         <div className='facet'>
           <div className='name'>
-            {this.props.data.label}
+            {stat.label}
           </div>
           <div className='score'>
-            {this.props.data.score}
+            {stat.score}
           </div>
           <div className='grade'>
-            {this.props.data.grade}
+            {stat.grade}
           </div>
           <div className='initialValue'>
-            {this.props.data.initialValue}
+            {stat.initialValue}
           </div>
         </div>
       );
