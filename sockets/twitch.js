@@ -121,13 +121,15 @@ module.exports = function (io) {
           break;
       }
       
-      // Scale the score to [0,5]
+      // Scale the score to [.5,5]
       score *= 5;
       if (score > 5)
-        score = 5;    
+        score = 5;
+      else if (score < .5)
+        score = .5;   
       
       return {
-        score: Math.round(score * 2) / 2 || .5,
+        score: Math.round(score * 2) / 2,
         grade: grades[Math.floor(score)],
         label: dataType,
         initialValue: data

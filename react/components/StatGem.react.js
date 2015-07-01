@@ -13,14 +13,13 @@ var StatGem = React.createClass({
   getInitialState: function () {
     // Our gem is 5 sided by default (based on images and props),
     return {
-      pathX: [0, 0, 0, 0, 0],
-      pathY: [0, 0, 0, 0, 0],
-      radius: [0, 0, 0, 0, 0],
-      // In radians
-      angles: [], 
-      animationComplete: false,
-      halfWidth: 0,
-      halfHeight: 0
+      // The (x,y) coordinates used to animate the stat gem
+      pathX: [],
+      pathY: [],
+      // The final (x,y) values for each label
+      finalX: [],
+      finalY: [],
+      animationComplete: false
     };
   },
 
@@ -29,13 +28,8 @@ var StatGem = React.createClass({
     // is the top of the pentagon, and incrementing by (2*pi)/5 will result in the
     // angle (in radians) of the next vertex
     var angles = [];
-    var initial = -Math.PI / 2;
-    var increment = -(2 * Math.PI) / 5;
-
-    for (var i=0; i < this.props.stats.length; i++) {
-      var angle = initial + increment * i;
-      angles.push(angle);
-    }
+    var initial = Math.PI / 2;
+    var increment = (2 * Math.PI) / 5;
 
     // We will need to use .5 the height/width to offset the clip path as if it was
     // being drawn on a coordinate plane and not from the edge of the element
@@ -43,8 +37,34 @@ var StatGem = React.createClass({
     var halfWidth = node.offsetWidth / 2;
     var halfHeight = node.offsetHeight / 2;
 
+    // The starting points of the paths need to be in the center of the div
+    var pathX = [];
+    var pathY = [];
+
+    // Calculate the final values for the pentagon vertices
+    var finalX = [];
+    var finalY = [];   
+    for (var i=0; i < this.props.stats.length; i++) {
+      var key = this.props.stats[i];
+      var angle = initial + increment * i;
+
+      // The radius is scaled so the resulting animation can stretch to the edge of the pentagon
+      var radius = this.props.data[key].score * 20;
+      var x = this.calculateX(0, radius, angle);
+      var y = this.calculateY(0, radius, angle);
+
+      // Because clip path is used to draw this animation, the 'origin' of the path is the top-left
+      // of the div. As a result, all y coordinates will need to be negative to be interpreted
+      // as positive. Further, we need to apply an offset (half the relevant div dimension) 
+      // to all values so they are positioned as though the center of the div were their origin
+      finalX.push(x + halfWidth);
+      finalY.push(-y + halfHeight);
+      pathX.push(halfWidth);
+      pathY.push(halfHeight);
+    }
+
     // Can't really avoid a re-render here while using state
-    this.setState({angles: angles, halfWidth: halfWidth, halfHeight: halfHeight}, function () {
+    this.setState({finalX: finalX, finalY: finalY, pathX: pathX, pathY: pathY, halfHeight: halfHeight, halfWidth: halfWidth}, function () {
       // We don't want to begin animating until the state is updated
       this.animatePath();
     }.bind(this));   
@@ -62,35 +82,43 @@ var StatGem = React.createClass({
   },
   animatePath: function () {
     // This will be responsible for animating in the clip-path for the stats
-    if (!this.state.animationComplete) {
-      var complete = true;
-      var newPathX = [];
-      var newPathY = [];
-      var newRadius = [];
+    var complete = true;
+    var newPathX = [];
+    var newPathY = [];
 
-      for (var i=0; i<this.props.stats.length; i++) {
-        var key = this.props.stats[i];
-        var r = 0;
-        var x = 0;
-        var y = 0;
+    // Increment these coordinates if they have not reached their final values
+    for (var i=0; i<this.props.stats.length; i++) {
+      var x = this.state.pathX[i];
+      var y = this.state.pathY[i];
 
-        // If the radius is not maxed out, increment it and recalculate the coordinates
-        if (this.state.radius[i] < this.props.data[key].score * 20) {
-          r += this.state.radius[i] + 2;
-          x = this.calculateX(this.state.halfWidth, r, this.state.angles[i]);
-          y = this.calculateY(this.state.halfHeight, r, this.state.angles[i]);
-          complete = false;
-        }
-
-        // Push the values regardless of whether or not they were changed
-        newPathX.push(x ? x : this.state.pathX[i]);
-        newPathY.push(y ? y : this.state.pathY[i]);
-        newRadius.push(r ? r : this.state.radius[i]);
+      var finalX = this.state.finalX[i];
+      if (this.state.halfWidth < finalX && x < finalX) {
+        x += 2;
+        complete = false;
+      } else if (this.state.halfWidth > finalX && x > finalX) {
+        x -= 2;
+        complete = false;
       }
 
-      this.setState({pathX: newPathX, pathY: newPathY, radius: newRadius, animationComplete: complete});
-      requestAnimationFrame(this.animatePath);
+      var finalY = this.state.finalY[i];
+      if (this.state.halfHeight < finalY && y < finalY) {    
+        y += 2;
+        complete = false;
+      } else if (this.state.halfHeight > finalY && y > finalY) {    
+        y -= 2;
+        complete = false;
+      }
+
+      // Push the values regardless of whether or not they were changed
+      newPathX.push(x);
+      newPathY.push(y);
     }
+
+    this.setState({pathX: newPathX, pathY: newPathY, animationComplete: complete});
+
+    // Continue looping until the transition is final
+    if (!complete)
+      requestAnimationFrame(this.animatePath);
   },
   render: function () {
     // A representation of a set of 5 stats given in a 'gem' format
@@ -104,7 +132,7 @@ var StatGem = React.createClass({
     }
 
     // Add the first value onto the end of the array as well, then convert to a string
-    //coordArray.push(coordArray[0]);
+    coordArray.push(coordArray[0]);
     var coordinates = coordArray.join(',');    
     var statStyle = {
       WebkitClipPath: 'polygon(' + coordinates + ')'

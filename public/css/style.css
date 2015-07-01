@@ -191,7 +191,6 @@ a {
   }
   .statGem .stats {
     background-color: #6441a5;
-    -webkit-clip-path: polygon(
-      0px 20px, 20px 20px, 20px 0px, 0px 0px
-    );
+    /* Temp value because the gem is not centered in the div */
+    top: 24px;
   }
