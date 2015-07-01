@@ -20016,7 +20016,7 @@ var StatBar = React.createClass({displayName: "StatBar",
   fillBar: function () {
     var width = this.state.width;
     // If the bar isn't full, keep animating
-    if (width < this.props.data.score*60) {
+    if (width < this.props.data.score*57) {
       requestAnimationFrame(this.fillBar);
       this.setState({width: width + 4});
     }
