@@ -19998,7 +19998,8 @@ var StatBar = React.createClass({displayName: "StatBar",
   },
   getInitialState: function () {
     return {
-      width: 0
+      width: 0,
+      mouseOver: false
     }
   },
 
@@ -20006,30 +20007,36 @@ var StatBar = React.createClass({displayName: "StatBar",
     this.fillBar();
   },
   
+  handleMouseOver: function () {
+    this.setState({ismouseOver: true});
+  },
+  handleMouseOut: function () {
+    this.setState({ismouseOver: false});
+  },
   fillBar: function () {
     var width = this.state.width;
     // If the bar isn't full, keep animating
-    if (width < this.props.data.score*100) {
-        requestAnimationFrame(this.fillBar);
-        this.setState({width: width + 5});
-        // 60 fps  
+    if (width < this.props.data.score*60) {
+      requestAnimationFrame(this.fillBar);
+      this.setState({width: width + 4});
     }
   },
   render: function () {
     // A representation of a given stat in a 'meter' format
-    var style = {
+    var barStyle = {
       width: this.state.width + 'px'
     };
+
+    // Assigns the value of the bar's 'name' field based on mouseover
+    var label = this.state.ismouseOver ? this.props.data.initialValue : this.props.data.label;
     return (
-      React.createElement("div", null, 
+      React.createElement("div", {className: "statBarContainer"}, 
         React.createElement("div", {className: "name"}, 
-          this.props.data.label
+          label
         ), 
-        React.createElement("div", {className: "statBar", style: style}), 
-        React.createElement("div", {className: "initialValue"}, 
-          this.props.data.initialValue
+        React.createElement("div", {className: "statBar", style: barStyle, onMouseOver: this.handleMouseOver, 
+          onMouseOut: this.handleMouseOut}
         )
-        
       )     
     );
   }

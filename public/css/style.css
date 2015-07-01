@@ -18,84 +18,85 @@ a {
   background-color: white;
 }
     
-  .centerColumn {
-    width: 1000px;
-    
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 10px;
-    bottom: 10px;
-    margin: auto;
-    
-    background-color: #D9DDE0;
-    border-radius: 20px;
-  }
+.centerColumn {
+  width: 1000px;
   
-    .appHeader {
-        width: 100%;
-        height: 140px;
-       
-        font-size: 120px; 
-        text-align: center;
-        
-        padding-top: 20px;
-        padding-bottom: 20px;   
-        background-color: #6441a5;
-        border-top-left-radius: 20px;
-        border-top-right-radius: 20px;
-      }
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 10px;
+  bottom: 10px;
+  margin: auto;
+  
+  background-color: #D9DDE0;
+  border-radius: 20px;
+}
+  
+  .appHeader {
+    width: 100%;
+    height: 140px;
+   
+    font-size: 120px; 
+    text-align: center;
     
-    .streamList {
-      position: absolute;
-      top: 180px;
-      bottom: 0;
-      
-      padding: 25px;
-      overflow-y: scroll;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-    } 
-      .smallStream {
-        width: 210px;
-        height: 210px;
-        
-        margin-bottom: 30px;
-        
-        border-radius: 20px;
-        overflow: hidden;
-        cursor: pointer;    
-      }
-        .smallStream img {
-          width: 100%;
-          height: 100%;
-        }
-      .smallStream.selected {
-        box-shadow: #6441a5 0 0 0 10px;
-      }
-      
-  .streamDetail {
-    width: 420px;
-    
-    position: absolute;
-    top: 10px;
-    bottom: 10px;
-    
-    padding: 10px;
+    padding-top: 20px;
+    padding-bottom: 20px;   
     background-color: #6441a5;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+  }
+    
+.streamList {
+  position: absolute;
+  top: 180px;
+  bottom: 0;
+  
+  padding: 25px;
+  overflow-y: scroll;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+} 
+  .smallStream {
+    width: 210px;
+    height: 210px;
+    
+    margin-bottom: 30px;
+    
     border-radius: 20px;
     overflow: hidden;
+    cursor: pointer;    
   }
-    .streamDetail.left {
-      left: 10px;
+    .smallStream img {
+      width: 100%;
+      height: 100%;
     }
-    .streamDetail.right {
-      right: 10px;
-    }
-    .streamProfile {
-      text-align: center;
-    }
+  .smallStream.selected {
+    box-shadow: #6441a5 0 0 0 10px;
+  }
+      
+.streamDetail {
+  width: 420px;
+  
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  
+  padding: 10px;
+  background-color: #6441a5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+  .streamDetail.left {
+    left: 10px;
+  }
+  .streamDetail.right {
+    right: 10px;
+  }
+  .streamProfile {
+    text-align: center;
+    margin: 10px;
+  }
     .streamProfile .logo {
       text-align: center;  
     }
@@ -106,19 +107,11 @@ a {
         border-radius: 20px;
         overflow: hidden;
       }
-      .streamProfile .name {
-        font-size: 40px;
-        text-align: center;
-        margin-bottom: 10px;
-      }
-      .streamProfile .name {
-        text-align: center;
-        margin-bottom: 10px;
-      }
-      .streamProfile .name {
-        text-align: center;
-        margin-bottom: 10px;
-      }
+    .streamProfile .name {
+      font-size: 40px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
 
 .indicatorContainer {
   margin-top: 10px;
@@ -128,23 +121,41 @@ a {
     margin-left: 10px;
     margin-right: 10px;
   }   
-    .indicator {
-      width: 25px;
-      height: 25px;
-      
-      margin-bottom: -5px;
-      
-      background-color: goldenrod;
-      border-radius: 12.5px;  
+  .indicator {
+    width: 25px;
+    height: 25px;
+    
+    margin-bottom: -5px;
+    
+    background-color: goldenrod;
+    border-radius: 12.5px;  
+  }
+    .indicator.active {
+      background-color: yellow;
+      box-shadow: 0px 0px 15px 5px yellow;
     }
-      .indicator.active {
-        background-color: yellow;
-        box-shadow: 0px 0px 15px 5px yellow;
-      }
-      
-.statBar {
-  height: 30px;
-  
-  background-color: yellow;
-  box-shadow: 0px 0px 15px 5px yellow;
+
+.statBarContainer {
+  position: relative;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
+  .statBarContainer .name {   
+    height: 30px;
+   
+    position: absolute;
+    top: 4px;
+    
+    font-size: 20px;
+  }
+    
+  .statBar {
+    height: 30px;
+    
+    position: relative;
+    left: 100px;
+    
+    background-color: yellow;
+    box-shadow: 0px 0px 15px 5px yellow;
+  }
+
