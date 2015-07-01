@@ -19819,7 +19819,7 @@ React.render(
   document.getElementById('app-mount')
 );
 
-},{"./components/ScouterApp.react":160,"react":156}],158:[function(require,module,exports){
+},{"./components/ScouterApp.react":161,"react":156}],158:[function(require,module,exports){
 var React = require('react');
 var StreamList = require('./StreamList.react');
 
@@ -19843,7 +19843,53 @@ var CenterColumn = React.createClass({displayName: "CenterColumn",
 
 module.exports = CenterColumn;
 
-},{"./StreamList.react":166,"react":156}],159:[function(require,module,exports){
+},{"./StreamList.react":167,"react":156}],159:[function(require,module,exports){
+var React = require('react');
+
+var GradeBubble = React.createClass({displayName: "GradeBubble",
+  getDefaultProps: function () {
+    return {
+      grade: '',
+      label: '',
+      className: '',
+    };
+  },
+  getInitialState: function () {
+    return {
+      mouseOver: false
+    };
+  },
+
+  handleMouseOver: function () {
+    this.setState({mouseOver: true});
+  },
+  handleMouseOut: function () {
+    this.setState({mouseOver: false});
+  },
+  render: function () {
+    // Show label based on whether the mouse is over the element
+    var label = this.state.mouseOver ? this.props.label : this.props.grade;
+    var className = 'gradeBubble ' + this.props.className;
+
+    // Position element at the vertex provided
+    var style = {
+      left: this.props.positionX,
+      top: this.props.positionY
+    };
+    return (
+      React.createElement("div", {className: className, onMouseOver: this.handleMouseOver, 
+      onMouseOut: this.handleMouseOut, style: style}, 
+        React.createElement("div", {className: "label"}, 
+          label
+        )
+      )
+    );
+  }
+});
+
+module.exports = GradeBubble;
+
+},{"react":156}],160:[function(require,module,exports){
 var React = require('react');
 
 var Indicator = React.createClass({displayName: "Indicator",
@@ -19870,7 +19916,7 @@ var Indicator = React.createClass({displayName: "Indicator",
 
 module.exports = Indicator;
 
-},{"react":156}],160:[function(require,module,exports){
+},{"react":156}],161:[function(require,module,exports){
 var React = require('react');
 var StreamComparer = require('./StreamComparer.react');
 var CenterColumn = require('./CenterColumn.react');
@@ -19948,7 +19994,7 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 
 module.exports = ScouterApp;
 
-},{"./CenterColumn.react":158,"./StreamComparer.react":164,"react":156}],161:[function(require,module,exports){
+},{"./CenterColumn.react":158,"./StreamComparer.react":165,"react":156}],162:[function(require,module,exports){
 var React = require('react');
 
 var SmallStream = React.createClass({displayName: "SmallStream",
@@ -19982,7 +20028,7 @@ var SmallStream = React.createClass({displayName: "SmallStream",
 
 module.exports = SmallStream;
 
-},{"react":156}],162:[function(require,module,exports){
+},{"react":156}],163:[function(require,module,exports){
 var React = require('react');
 
 var StatBar = React.createClass({displayName: "StatBar",
@@ -20044,8 +20090,9 @@ var StatBar = React.createClass({displayName: "StatBar",
 
 module.exports = StatBar;
 
-},{"react":156}],163:[function(require,module,exports){
+},{"react":156}],164:[function(require,module,exports){
 var React = require('react');
+var GradeBubble = require('./GradeBubble.react')
 
 var StatGem = React.createClass({displayName: "StatGem",
   getDefaultProps: function () {
@@ -20066,7 +20113,8 @@ var StatGem = React.createClass({displayName: "StatGem",
       // The final (x,y) values for each label
       finalX: [],
       finalY: [],
-      animationComplete: false
+      animationComplete: false,
+      mouseOver: ''
     };
   },
 
@@ -20184,11 +20232,25 @@ var StatGem = React.createClass({displayName: "StatGem",
     var statStyle = {
       WebkitClipPath: 'polygon(' + coordinates + ')'
     };
+
+    // Return grade bubbles
+    
+    var grades = this.props.stats.map(function (key, index) {
+      var data = this.props.data[key];
+      var className = 'bubble' + index;
+
+      return(
+        React.createElement(GradeBubble, {key: data.label, className: className, grade: data.grade, label: data.label})
+      );
+    }.bind(this));
     return (
       React.createElement("div", {className: "statGem"}, 
         React.createElement("img", {className: "gem", src: this.props.background}), 
         React.createElement("div", {className: "gem stats", style: statStyle, ref: "stats"}), 
-        React.createElement("img", {className: "gem", src: this.props.guides})
+        React.createElement("img", {className: "gem", src: this.props.guides}), 
+        React.createElement("div", {className: "gem gradeCont"}, 
+          grades
+        )
       )
     );
   }
@@ -20196,7 +20258,7 @@ var StatGem = React.createClass({displayName: "StatGem",
 
 module.exports = StatGem;
 
-},{"react":156}],164:[function(require,module,exports){
+},{"./GradeBubble.react":159,"react":156}],165:[function(require,module,exports){
 var React = require('react');
 var StreamDetail = require('./StreamDetail.react');
 
@@ -20227,7 +20289,7 @@ var StreamComparer = React.createClass({displayName: "StreamComparer",
 
 module.exports = StreamComparer;
 
-},{"./StreamDetail.react":165,"react":156}],165:[function(require,module,exports){
+},{"./StreamDetail.react":166,"react":156}],166:[function(require,module,exports){
 var React = require('react');
 var StreamProfile = require('./StreamProfile.react');
 var StatBar = require('./StatBar.react');
@@ -20256,7 +20318,7 @@ var StreamDetail = React.createClass({displayName: "StreamDetail",
 
 module.exports = StreamDetail;
 
-},{"./StatBar.react":162,"./StatGem.react":163,"./StreamProfile.react":167,"react":156}],166:[function(require,module,exports){
+},{"./StatBar.react":163,"./StatGem.react":164,"./StreamProfile.react":168,"react":156}],167:[function(require,module,exports){
 var React = require('react');
 var SmallStream = require('./SmallStream.react');
 
@@ -20284,7 +20346,7 @@ var StreamList = React.createClass({displayName: "StreamList",
 
 module.exports = StreamList;
 
-},{"./SmallStream.react":161,"react":156}],167:[function(require,module,exports){
+},{"./SmallStream.react":162,"react":156}],168:[function(require,module,exports){
 var React = require('react');
 var Indicator = require('./Indicator.react');
 
@@ -20323,4 +20385,4 @@ var StreamProfile = React.createClass({displayName: "StreamProfile",
 
 module.exports = StreamProfile;
 
-},{"./Indicator.react":159,"react":156}]},{},[157]);
+},{"./Indicator.react":160,"react":156}]},{},[157]);

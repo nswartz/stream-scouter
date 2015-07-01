@@ -1,4 +1,5 @@
 var React = require('react');
+var GradeBubble = require('./GradeBubble.react')
 
 var StatGem = React.createClass({
   getDefaultProps: function () {
@@ -19,7 +20,8 @@ var StatGem = React.createClass({
       // The final (x,y) values for each label
       finalX: [],
       finalY: [],
-      animationComplete: false
+      animationComplete: false,
+      mouseOver: ''
     };
   },
 
@@ -137,11 +139,25 @@ var StatGem = React.createClass({
     var statStyle = {
       WebkitClipPath: 'polygon(' + coordinates + ')'
     };
+
+    // Return grade bubbles
+    
+    var grades = this.props.stats.map(function (key, index) {
+      var data = this.props.data[key];
+      var className = 'bubble' + index;
+
+      return(
+        <GradeBubble key={data.label} className={className} grade={data.grade} label={data.label} />
+      );
+    }.bind(this));
     return (
       <div className='statGem'>
         <img className='gem' src={this.props.background} />
         <div className='gem stats' style={statStyle} ref='stats'></div>
         <img className='gem' src={this.props.guides} />
+        <div className='gem gradeCont'>
+          {grades}
+        </div>
       </div>
     );
   }
