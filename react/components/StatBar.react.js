@@ -45,12 +45,12 @@ var StatBar = React.createClass({
     // Assigns the value of the bar's 'name' field based on mouseover
     var label = this.state.ismouseOver ? this.props.data.initialValue : this.props.data.label;
     return (
-      <div className='statBarContainer'>      
+      <div className='statBarContainer' onMouseOver={this.handleMouseOver} 
+          onMouseOut={this.handleMouseOut}>      
         <div className='name'>
           {label}
         </div>
-        <div className='statBar' style={barStyle} onMouseOver={this.handleMouseOver} 
-          onMouseOut={this.handleMouseOut}>
+        <div className='statBar' style={barStyle}>
         </div>    
       </div>     
     );

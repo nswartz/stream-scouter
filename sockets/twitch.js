@@ -127,7 +127,7 @@ module.exports = function (io) {
         score = 5;    
       
       return {
-        score: score.toFixed(2),
+        score: Math.round(score * 2) / 2 || .5,
         grade: grades[Math.floor(score)],
         label: dataType,
         initialValue: data
