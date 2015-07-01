@@ -19819,7 +19819,31 @@ React.render(
   document.getElementById('app-mount')
 );
 
-},{"./components/ScouterApp.react":159,"react":156}],158:[function(require,module,exports){
+},{"./components/ScouterApp.react":160,"react":156}],158:[function(require,module,exports){
+var React = require('react');
+var StreamList = require('./StreamList.react');
+
+var CenterColumn = React.createClass({displayName: "CenterColumn",
+  getInitialState: function () {
+    return { 
+      data: [] 
+    };
+  },
+
+  render: function () {
+    // Used to contain the streams and buttons the app uses
+    return (
+      React.createElement("div", {className: "centerColumn"}, 
+        React.createElement("div", {className: "appHeader"}, "Stream Scouter"), 
+        React.createElement(StreamList, {data: this.props.data, onChannelClick: this.props.onChannelClick})
+      )    
+    );
+  }
+});
+
+module.exports = CenterColumn;
+
+},{"./StreamList.react":166,"react":156}],159:[function(require,module,exports){
 var React = require('react');
 
 var Indicator = React.createClass({displayName: "Indicator",
@@ -19834,17 +19858,22 @@ var Indicator = React.createClass({displayName: "Indicator",
     // A small indicator where the 'active' class corresponds to its props
     var className = this.props.active ? 'indicator active' : 'indicator';
     return (
-      React.createElement("div", {className: className})
+      React.createElement("div", null, 
+        React.createElement("div", null, 
+          this.props.label, ":" 
+        ), 
+        React.createElement("div", {className: className})
+      ) 
     );
   }
 });
 
 module.exports = Indicator;
 
-},{"react":156}],159:[function(require,module,exports){
+},{"react":156}],160:[function(require,module,exports){
 var React = require('react');
 var StreamComparer = require('./StreamComparer.react');
-var StreamList = require('./StreamList.react');
+var CenterColumn = require('./CenterColumn.react');
 
 var ScouterApp = React.createClass({displayName: "ScouterApp",
   getInitialState: function () {
@@ -19853,7 +19882,7 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
     };
   },
   
-  componentWillMount: function () { 
+  componentDidMount: function () { 
     // Set up our socket that will be used to refresh data    
     this.props.socket.on('update client', function (data) {
       this.setState({data: data});
@@ -19911,7 +19940,7 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
     return (
       React.createElement("div", {className: "scouterApp"}, 
         React.createElement(StreamComparer, {data: compareData}), 
-        React.createElement(StreamList, {data: listData, onChannelClick: this.handleChannelClick})
+        React.createElement(CenterColumn, {data: listData, onChannelClick: this.handleChannelClick})
       )    
     );
   }
@@ -19919,7 +19948,7 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 
 module.exports = ScouterApp;
 
-},{"./StreamComparer.react":163,"./StreamList.react":165,"react":156}],160:[function(require,module,exports){
+},{"./CenterColumn.react":158,"./StreamComparer.react":164,"react":156}],161:[function(require,module,exports){
 var React = require('react');
 
 var SmallStream = React.createClass({displayName: "SmallStream",
@@ -19953,7 +19982,7 @@ var SmallStream = React.createClass({displayName: "SmallStream",
 
 module.exports = SmallStream;
 
-},{"react":156}],161:[function(require,module,exports){
+},{"react":156}],162:[function(require,module,exports){
 var React = require('react');
 
 var StatBar = React.createClass({displayName: "StatBar",
@@ -19967,28 +19996,48 @@ var StatBar = React.createClass({displayName: "StatBar",
       }
     };
   },
+  getInitialState: function () {
+    return {
+      width: 0
+    }
+  },
+
+  componentDidMount: function () {
+    this.fillBar();
+  },
   
+  fillBar: function () {
+    var width = this.state.width;
+    // If the bar isn't full, keep animating
+    if (width < this.props.data.score*100) {
+        requestAnimationFrame(this.fillBar);
+        this.setState({width: width + 5});
+        // 60 fps  
+    }
+  },
   render: function () {
     // A representation of a given stat in a 'meter' format
+    var style = {
+      width: this.state.width + 'px'
+    };
     return (
-      React.createElement("div", {className: "statBar"}, 
+      React.createElement("div", null, 
         React.createElement("div", {className: "name"}, 
           this.props.data.label
         ), 
-        React.createElement("div", {className: "score"}, 
-          this.props.data.score
-        ), 
+        React.createElement("div", {className: "statBar", style: style}), 
         React.createElement("div", {className: "initialValue"}, 
           this.props.data.initialValue
         )
-      )
+        
+      )     
     );
   }
 });
 
 module.exports = StatBar;
 
-},{"react":156}],162:[function(require,module,exports){
+},{"react":156}],163:[function(require,module,exports){
 var React = require('react');
 
 var StatGem = React.createClass({displayName: "StatGem",
@@ -20005,7 +20054,7 @@ var StatGem = React.createClass({displayName: "StatGem",
     var facets = this.props.stats.map(function (key) {
       var stat = this.props.data[key];
       return (
-        React.createElement("div", {className: "facet"}, 
+        React.createElement("div", {className: "facet", key: key}, 
           React.createElement("div", {className: "name"}, 
             stat.label
           ), 
@@ -20031,7 +20080,7 @@ var StatGem = React.createClass({displayName: "StatGem",
 
 module.exports = StatGem;
 
-},{"react":156}],163:[function(require,module,exports){
+},{"react":156}],164:[function(require,module,exports){
 var React = require('react');
 var StreamDetail = require('./StreamDetail.react');
 
@@ -20062,7 +20111,7 @@ var StreamComparer = React.createClass({displayName: "StreamComparer",
 
 module.exports = StreamComparer;
 
-},{"./StreamDetail.react":164,"react":156}],164:[function(require,module,exports){
+},{"./StreamDetail.react":165,"react":156}],165:[function(require,module,exports){
 var React = require('react');
 var StreamProfile = require('./StreamProfile.react');
 var StatBar = require('./StatBar.react');
@@ -20091,7 +20140,7 @@ var StreamDetail = React.createClass({displayName: "StreamDetail",
 
 module.exports = StreamDetail;
 
-},{"./StatBar.react":161,"./StatGem.react":162,"./StreamProfile.react":166,"react":156}],165:[function(require,module,exports){
+},{"./StatBar.react":162,"./StatGem.react":163,"./StreamProfile.react":167,"react":156}],166:[function(require,module,exports){
 var React = require('react');
 var SmallStream = require('./SmallStream.react');
 
@@ -20119,7 +20168,7 @@ var StreamList = React.createClass({displayName: "StreamList",
 
 module.exports = StreamList;
 
-},{"./SmallStream.react":160,"react":156}],166:[function(require,module,exports){
+},{"./SmallStream.react":161,"react":156}],167:[function(require,module,exports){
 var React = require('react');
 var Indicator = require('./Indicator.react');
 
@@ -20131,22 +20180,23 @@ var StreamProfile = React.createClass({displayName: "StreamProfile",
   },
   
   render: function () {
-    // The text-centric piece of the StreamDetail view
+    // [Jankily] remove the http://www. from the url for display purposes
+    var shortUrl = this.props.data.url.slice(11, Number.MAX_VALUE);
     return (
       React.createElement("div", {className: "streamProfile"}, 
-        React.createElement("div", {className: "logo"}, 
-          React.createElement("img", {src: this.props.data.logo})
-        ), 
         React.createElement("div", {className: "name"}, 
           this.props.data.name
         ), 
+        React.createElement("div", {className: "logo"}, 
+          React.createElement("img", {src: this.props.data.logo})
+        ), 
         React.createElement("div", {className: "game"}, 
-          this.props.data.game
+          "playing ", this.props.data.game
         ), 
         React.createElement("div", {className: "url"}, 
-          this.props.data.url
+          "on ", React.createElement("a", {href: this.props.data.url}, shortUrl)
         ), 
-        React.createElement("div", null, 
+        React.createElement("div", {className: "indicatorContainer"}, 
           React.createElement(Indicator, {label: "Partner", active: this.props.data.partner}), 
           React.createElement(Indicator, {label: "Mature", active: this.props.data.mature})
         )
@@ -20157,4 +20207,4 @@ var StreamProfile = React.createClass({displayName: "StreamProfile",
 
 module.exports = StreamProfile;
 
-},{"./Indicator.react":158,"react":156}]},{},[157]);
+},{"./Indicator.react":159,"react":156}]},{},[157]);

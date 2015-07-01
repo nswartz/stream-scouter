@@ -11,21 +11,41 @@ var StatBar = React.createClass({
       }
     };
   },
+  getInitialState: function () {
+    return {
+      width: 0
+    }
+  },
+
+  componentDidMount: function () {
+    this.fillBar();
+  },
   
+  fillBar: function () {
+    var width = this.state.width;
+    // If the bar isn't full, keep animating
+    if (width < this.props.data.score*100) {
+        requestAnimationFrame(this.fillBar);
+        this.setState({width: width + 5});
+        // 60 fps  
+    }
+  },
   render: function () {
     // A representation of a given stat in a 'meter' format
+    var style = {
+      width: this.state.width + 'px'
+    };
     return (
-      <div className='statBar'>
+      <div>      
         <div className='name'>
           {this.props.data.label}
         </div>
-        <div className='score'>
-          {this.props.data.score}
-        </div>
+        <div className='statBar' style={style}></div>
         <div className='initialValue'>
           {this.props.data.initialValue}
         </div>
-      </div>
+        
+      </div>     
     );
   }
 });

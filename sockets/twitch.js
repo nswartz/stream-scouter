@@ -20,7 +20,7 @@ module.exports = function (io) {
     
     // Get 10 random streams for the initial data
     if (!twitchData)
-      refreshData(10);    
+      refreshData(40);    
     
     // Refresh data when requested
     socket.on('refresh data', function (msg) {
@@ -110,11 +110,11 @@ module.exports = function (io) {
           break;      
         case 'Views':
           // Page views are relatively easy to get
-          score = data / 50000;
+          score = data / 1000;
           break;    
         case 'Followers':
           // By contrast, followers are much more difficult
-          score = data / 5000;
+          score = data / 100;
           break;
         default:
           score = 0;
@@ -127,7 +127,7 @@ module.exports = function (io) {
         score = 5;    
       
       return {
-        score: score,
+        score: score.toFixed(2),
         grade: grades[Math.floor(score)],
         label: dataType,
         initialValue: data

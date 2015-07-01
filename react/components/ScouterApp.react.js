@@ -1,6 +1,6 @@
 var React = require('react');
 var StreamComparer = require('./StreamComparer.react');
-var StreamList = require('./StreamList.react');
+var CenterColumn = require('./CenterColumn.react');
 
 var ScouterApp = React.createClass({
   getInitialState: function () {
@@ -9,7 +9,7 @@ var ScouterApp = React.createClass({
     };
   },
   
-  componentWillMount: function () { 
+  componentDidMount: function () { 
     // Set up our socket that will be used to refresh data    
     this.props.socket.on('update client', function (data) {
       this.setState({data: data});
@@ -67,7 +67,7 @@ var ScouterApp = React.createClass({
     return (
       <div className='scouterApp'>
         <StreamComparer data={compareData} />
-        <StreamList data={listData} onChannelClick={this.handleChannelClick} />
+        <CenterColumn data={listData} onChannelClick={this.handleChannelClick} />
       </div>    
     );
   }

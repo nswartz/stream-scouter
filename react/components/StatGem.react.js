@@ -14,7 +14,7 @@ var StatGem = React.createClass({
     var facets = this.props.stats.map(function (key) {
       var stat = this.props.data[key];
       return (
-        <div className='facet'>
+        <div className='facet' key={key}>
           <div className='name'>
             {stat.label}
           </div>
