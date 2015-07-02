@@ -23,7 +23,7 @@ var CenterColumn = React.createClass({
       <div className='centerColumn'>
         <div className='appHeader'>Stream Scouter</div>
         <AppButton label='Refresh' enabled={this.props.refreshEnabled} onButtonClick={this.props.onRefreshClick} />
-        <AppButton label='"Compare"' enabled={this.props.compareEnabled} onButtonClick={this.props.onCompareClick} />
+        <AppButton label='Compare' enabled={this.props.compareEnabled} onButtonClick={this.props.onCompareClick} />
         <StreamList data={this.props.data} onChannelClick={this.props.onChannelClick} />
       </div>    
     );

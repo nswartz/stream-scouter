@@ -51,7 +51,7 @@ var StatGem = React.createClass({
       var angle = initial + increment * i;
 
       // The radius is scaled so the resulting animation can stretch to the edge of the pentagon
-      var radius = this.props.data[key].score * 20;
+      var radius = this.props.data[key].score * 29;
       var x = this.calculateX(0, radius, angle);
       var y = this.calculateY(0, radius, angle);
 
@@ -125,6 +125,7 @@ var StatGem = React.createClass({
       // If complete, signal that it is safe to unmount this component
       this.props.onGemAnimationComplete();
   },
+  
   render: function () {
     // A representation of a set of 5 stats given in a 'gem' format
     // This is the progress for the clip path animation. The first and last values will match
@@ -143,14 +144,14 @@ var StatGem = React.createClass({
       WebkitClipPath: 'polygon(' + coordinates + ')'
     };
 
-    // Return grade bubbles
-    
+    // Return grade bubbles  
     var grades = this.props.stats.map(function (key, index) {
       var data = this.props.data[key];
       var className = 'bubble' + index;
 
       return(
-        <GradeBubble key={data.label} className={className} grade={data.grade} label={data.label} />
+        <GradeBubble key={data.label} className={className} grade={data.grade} 
+        label={data.label} initialValue={data.initialValue}/>
       );
     }.bind(this));
     return (

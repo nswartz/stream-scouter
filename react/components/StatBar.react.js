@@ -32,10 +32,13 @@ var StatBar = React.createClass({
     var width = this.state.width;
     // If the bar isn't full, keep animating
     if (width < this.props.data.score*57) {
-      requestAnimationFrame(this.fillBar);
       this.setState({width: width + 4});
+      requestAnimationFrame(this.fillBar);
+    } else {
+      cancelAnimationFrame(this.fillBar);
     }
   },
+
   render: function () {
     // A representation of a given stat in a 'meter' format
     var barStyle = {

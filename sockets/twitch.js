@@ -18,9 +18,11 @@ module.exports = function (io) {
     // Log the connection
     console.log('new twitch socket connected: ' + socket.handshake.address);
     
-    // Get 10 random streams for the initial data
+    // Get 40 random streams for the initial data
     if (!twitchData)
-      refreshData(40);    
+      refreshData(40);
+    else
+      pushDataToClient();    
     
     // Refresh data when requested    
     socket.on('request update', function (batchSize) {
@@ -40,15 +42,28 @@ module.exports = function (io) {
       request(options, function (error, response, body) {
         if (!error && response.statusCode === 200) {
           var twitchResponse = JSON.parse(body);
-          twitchResponse = twitchResponse.streams.slice(0, batchSize);
-          processTwitchResponse(twitchResponse);
+          processTwitchResponse(twitchResponse.streams, batchSize);
         }
       });
     }
     
     // Process Twitch response array into a format that fits the app
-    function processTwitchResponse(response) {
-      var data = response.map(function (stream) {
+    function processTwitchResponse(response, batchSize) {
+      // Looking at people without profile pics is boring, so filter those out
+      var arr = [];
+      for (var i=0; i<response.length; i++) {
+        if (response[i].channel.logo) {
+          arr.push(response[i]);
+          
+        // We will break out of the loop when the end is reached or
+        // when we've found a number of records equal to the batch size
+          if (arr.length >= batchSize)
+            break;
+        }
+      }
+      
+      
+      var data = arr.map(function (stream) {
         var newO = {};
         
         newO.id = stream._id;
@@ -97,20 +112,21 @@ module.exports = function (io) {
           // 3 hour stream duration for maximum points
           var hour = 60 * 60 * 1000;
           var duration = (new Date()).getTime() - Date.parse(data);
-          data = data / hour;
+          data = duration / hour;
           score = duration / (3 * hour);
           break;
         case 'Star Power':
           // Random value between [0,1) (I needed a 5th stat)
           score = Math.random();
+          data = score;
           break;      
         case 'Views':
           // Page views are relatively easy to get
-          score = data / 1000;
+          score = data / 10000;
           break;    
         case 'Followers':
           // By contrast, followers are much more difficult
-          score = data / 100;
+          score = data / 1000;
           break;
         default:
           score = 0;
@@ -125,10 +141,10 @@ module.exports = function (io) {
         score = .5;   
       
       return {
-        score: Math.round(score * 2) / 2,
+        score: Math.round(score * 100) / 100,
         grade: grades[Math.floor(score)],
         label: dataType,
-        initialValue: data
+        initialValue: Math.round(data * 100) / 100
       };
     }
     
