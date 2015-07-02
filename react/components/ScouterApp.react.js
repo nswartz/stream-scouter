@@ -8,6 +8,7 @@ var ScouterApp = React.createClass({
       data: [],
       refreshEnabled: false,
       compareEnabled: false,
+      beginComparison: false,
       canDeselect: []
     };
   },
@@ -15,8 +16,13 @@ var ScouterApp = React.createClass({
   componentDidMount: function () { 
     // Set up our socket that will be used to refresh data    
     this.props.socket.on('update client', function (data) {
-      // When the data comes back, we can populate our state data and enable refresh
-      this.setState({data: data, refreshEnabled: true});
+      // When the data comes back, we can populate our state data
+      this.setState({data: data});
+
+     	// Wait a short period before enabling the refresh button
+     	setTimeout(function () {
+				this.setState({refreshEnabled: true});
+     	}.bind(this), 3000); 
     }.bind(this));
     // Request the Twitch data through the socket
     this.requestUpdate();
@@ -33,33 +39,37 @@ var ScouterApp = React.createClass({
     // If the stream is selected and it is allowed to be deselected, deselect it
     // Otherwise select it as long as there are less than 2 already selected
     var newDeselect = this.state.canDeselect.slice();
-    
+
     if (streamData[index].selected) {
       streamData[index].selected = false;
       var i = this.state.canDeselect.indexOf(streamId);  
       newDeselect.splice(i, 1);
+      numSelected--;
 
     } else if (!streamData[index].selected && numSelected < 2) {
       streamData[index].selected = true;
+      numSelected++
     }
 
-    this.setState({data: streamData, canDeselect: newDeselect});
+    // If there are two streams selected, enable the compare button
+    this.setState({data: streamData, canDeselect: newDeselect, compareEnabled: numSelected === 2});
   },
   handleRefreshClick: function () {
     // Don't want to spam click the refresh while updating
-    this.setState({requestEnabled: false});
+    this.setState({refreshEnabled: false});
     this.requestUpdate();
   },
   handleCompareClick: function () {
     // If two streams are selected, we can compare them
-
+    this.setState({beginComparison: true});
   },
   handleGemAnimationComplete: function (streamId) {
     // This should be called when the StatGem finishes animating. It usually takes a while
     // longer, so we can use this function to signal that it is safe to deselect that profile
     var newDeselect = this.state.canDeselect.slice();
     newDeselect.push(streamId);
-    this.setState({canDeselect: newDeselect });
+
+    this.setState({canDeselect: newDeselect});
   },  
   getSelectedStreams: function () {
     // Returns 0-2 selected streams. Cloned so it is safe to modify them
@@ -97,7 +107,8 @@ var ScouterApp = React.createClass({
     var compareData = this.getSelectedStreams();
     return (
       <div className='scouterApp'>
-        <StreamComparer data={compareData} onGemAnimationComplete={this.handleGemAnimationComplete} />
+        <StreamComparer data={compareData} onGemAnimationComplete={this.handleGemAnimationComplete} 
+        beginComparison={this.state.beginComparison} />
         <CenterColumn data={listData} onChannelClick={this.handleChannelClick} onRefreshClick={this.handleRefreshClick} 
         onCompareClick={this.handleCompareClick} refreshEnabled={this.state.refreshEnabled} compareEnabled={this.state.compareEnabled} />
       </div>    

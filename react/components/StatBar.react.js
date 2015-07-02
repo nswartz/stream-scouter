@@ -21,6 +21,9 @@ var StatBar = React.createClass({
   componentDidMount: function () {
     this.fillBar();
   },
+  componentWillUnmount: function () {
+    cancelAnimationFrame(this.fillBar);
+  },
   
   handleMouseOver: function () {
     this.setState({ismouseOver: true});
@@ -32,8 +35,8 @@ var StatBar = React.createClass({
     var width = this.state.width;
     // If the bar isn't full, keep animating
     if (width < this.props.data.score*57) {
-      requestAnimationFrame(this.fillBar);
       this.setState({width: width + 4});
+      requestAnimationFrame(this.fillBar);
     }
   },
   render: function () {

@@ -10,19 +10,23 @@ var GradeBubble = React.createClass({
   },
   getInitialState: function () {
     return {
-      mouseOver: false
+      mouseOver: false,
+      clicked: false
     };
   },
 
+  handleClick: function () {
+    this.setState({clicked: !this.state.clicked})
+  },
   handleMouseOver: function () {
     this.setState({mouseOver: true});
   },
   handleMouseOut: function () {
-    this.setState({mouseOver: false});
+    this.setState({mouseOver: false, clicked: false});
   },
   render: function () {
-    // Show label based on whether the mouse is over the element
-    var label = this.state.mouseOver ? this.props.label : this.props.grade;
+    // Show label based on whether the mouse is over the element and if the user clicked the element
+    var label = this.state.mouseOver ? this.state.clicked ? this.props.initialValue : this.props.label : this.props.grade;
     var className = 'gradeBubble ' + this.props.className;
 
     // Position element at the vertex provided
@@ -31,7 +35,7 @@ var GradeBubble = React.createClass({
       top: this.props.positionY
     };
     return (
-      <div className={className} onMouseOver={this.handleMouseOver} 
+      <div className={className} onClick={this.handleClick} onMouseOver={this.handleMouseOver} 
       onMouseOut={this.handleMouseOut} style={style}>
         <div className='label'>
           {label} 

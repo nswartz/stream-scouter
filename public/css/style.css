@@ -1,5 +1,5 @@
 body {
-  font: 25px "Open Sans", 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font: 23px "Open Sans", 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: bold;
   color: white;
 }
@@ -25,6 +25,7 @@ a {
   position: absolute;
   line-height: 100px;
   text-align: center;
+  font-size: 30px;
   border-radius: 20px;
   cursor: pointer;
 }
@@ -47,6 +48,18 @@ a {
   }
   .appButton.Compare.disabled {
     background-color: darkslateblue;
+    cursor: default;
+    top: 40px;
+    right: 40px;
+  }
+  
+  .appButton.Close {
+    background-color: yellow;
+    top: 40px;
+    right: 40px;
+  }
+  .appButton.Close.disabled {
+    background-color: darkgoldenrod;
     cursor: default;
     top: 40px;
     right: 40px;
@@ -107,7 +120,7 @@ a {
       height: 100%;
     }
   .smallStream.selected {
-    box-shadow: #6441a5 0 0 0 10px;
+    box-shadow: yellow 0 0 15px 10px;
   }
       
 .streamDetail {
@@ -134,11 +147,13 @@ a {
   }
     .streamProfile .logo {
       text-align: center;  
+      margin-bottom: 10px;
     }
       .streamProfile .logo img {
         width: 250px;
         height: 250px;
         
+        box-shadow: yellow 0 0 15px 10px;
         border-radius: 20px;
         overflow: hidden;
       }
@@ -162,7 +177,7 @@ a {
     
     margin-bottom: -5px;
     
-    background-color: goldenrod;
+    background-color: darkgoldenrod;
     border-radius: 12.5px;  
   }
     .indicator.active {
@@ -174,8 +189,8 @@ a {
   height: 50px;
   
   position: relative;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   
   background-color: black;
   border-radius: 10px;

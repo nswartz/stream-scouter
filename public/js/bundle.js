@@ -19841,12 +19841,15 @@ var AppButton = React.createClass({displayName: "AppButton",
     var style = {
       boxShadow: 'inset 10px 10px 5px 0px rgba(0,0,0,0.45)'
     }
-    this.setState({style: style});
+
+    if (this.props.enabled)
+      this.setState({style: style});
   },
-  handleMouseUp: function (e) {
+  handleMouseUpOut: function (e) {
     e.preventDefault();
 
-    this.setState({style: {}});
+    if (this.props.enabled)
+      this.setState({style: {}});
   },
   handleClick: function (e) {
     e.preventDefault();
@@ -19861,7 +19864,7 @@ var AppButton = React.createClass({displayName: "AppButton",
     className += this.props.label;
     return (
       React.createElement("div", {className: className, style: this.state.style, onClick: this.handleClick, 
-      onMouseDown: this.handleMouseDown, onMouseUp: this.handleMouseUp}, 
+      onMouseDown: this.handleMouseDown, onMouseUp: this.handleMouseUpOut, onMouseOut: this.handleMouseUpOut}, 
         this.props.label
       )
     );
@@ -19918,19 +19921,23 @@ var GradeBubble = React.createClass({displayName: "GradeBubble",
   },
   getInitialState: function () {
     return {
-      mouseOver: false
+      mouseOver: false,
+      clicked: false
     };
   },
 
+  handleClick: function () {
+    this.setState({clicked: !this.state.clicked})
+  },
   handleMouseOver: function () {
     this.setState({mouseOver: true});
   },
   handleMouseOut: function () {
-    this.setState({mouseOver: false});
+    this.setState({mouseOver: false, clicked: false});
   },
   render: function () {
-    // Show label based on whether the mouse is over the element
-    var label = this.state.mouseOver ? this.props.label : this.props.grade;
+    // Show label based on whether the mouse is over the element and if the user clicked the element
+    var label = this.state.mouseOver ? this.state.clicked ? this.props.initialValue : this.props.label : this.props.grade;
     var className = 'gradeBubble ' + this.props.className;
 
     // Position element at the vertex provided
@@ -19939,7 +19946,7 @@ var GradeBubble = React.createClass({displayName: "GradeBubble",
       top: this.props.positionY
     };
     return (
-      React.createElement("div", {className: className, onMouseOver: this.handleMouseOver, 
+      React.createElement("div", {className: className, onClick: this.handleClick, onMouseOver: this.handleMouseOver, 
       onMouseOut: this.handleMouseOut, style: style}, 
         React.createElement("div", {className: "label"}, 
           label
@@ -19989,6 +19996,7 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
       data: [],
       refreshEnabled: false,
       compareEnabled: false,
+      beginComparison: false,
       canDeselect: []
     };
   },
@@ -19996,8 +20004,13 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
   componentDidMount: function () { 
     // Set up our socket that will be used to refresh data    
     this.props.socket.on('update client', function (data) {
-      // When the data comes back, we can populate our state data and enable refresh
-      this.setState({data: data, refreshEnabled: true});
+      // When the data comes back, we can populate our state data
+      this.setState({data: data});
+
+     	// Wait a short period before enabling the refresh button
+     	setTimeout(function () {
+				this.setState({refreshEnabled: true});
+     	}.bind(this), 3000); 
     }.bind(this));
     // Request the Twitch data through the socket
     this.requestUpdate();
@@ -20014,33 +20027,37 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
     // If the stream is selected and it is allowed to be deselected, deselect it
     // Otherwise select it as long as there are less than 2 already selected
     var newDeselect = this.state.canDeselect.slice();
-    
+
     if (streamData[index].selected) {
       streamData[index].selected = false;
       var i = this.state.canDeselect.indexOf(streamId);  
       newDeselect.splice(i, 1);
+      numSelected--;
 
     } else if (!streamData[index].selected && numSelected < 2) {
       streamData[index].selected = true;
+      numSelected++
     }
 
-    this.setState({data: streamData, canDeselect: newDeselect});
+    // If there are two streams selected, enable the compare button
+    this.setState({data: streamData, canDeselect: newDeselect, compareEnabled: numSelected === 2});
   },
   handleRefreshClick: function () {
     // Don't want to spam click the refresh while updating
-    this.setState({requestEnabled: false});
+    this.setState({refreshEnabled: false});
     this.requestUpdate();
   },
   handleCompareClick: function () {
     // If two streams are selected, we can compare them
-
+    this.setState({beginComparison: true});
   },
   handleGemAnimationComplete: function (streamId) {
     // This should be called when the StatGem finishes animating. It usually takes a while
     // longer, so we can use this function to signal that it is safe to deselect that profile
     var newDeselect = this.state.canDeselect.slice();
     newDeselect.push(streamId);
-    this.setState({canDeselect: newDeselect });
+
+    this.setState({canDeselect: newDeselect});
   },  
   getSelectedStreams: function () {
     // Returns 0-2 selected streams. Cloned so it is safe to modify them
@@ -20078,7 +20095,8 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
     var compareData = this.getSelectedStreams();
     return (
       React.createElement("div", {className: "scouterApp"}, 
-        React.createElement(StreamComparer, {data: compareData, onGemAnimationComplete: this.handleGemAnimationComplete}), 
+        React.createElement(StreamComparer, {data: compareData, onGemAnimationComplete: this.handleGemAnimationComplete, 
+        beginComparison: this.state.beginComparison}), 
         React.createElement(CenterColumn, {data: listData, onChannelClick: this.handleChannelClick, onRefreshClick: this.handleRefreshClick, 
         onCompareClick: this.handleCompareClick, refreshEnabled: this.state.refreshEnabled, compareEnabled: this.state.compareEnabled})
       )    
@@ -20148,6 +20166,9 @@ var StatBar = React.createClass({displayName: "StatBar",
   componentDidMount: function () {
     this.fillBar();
   },
+  componentWillUnmount: function () {
+    cancelAnimationFrame(this.fillBar);
+  },
   
   handleMouseOver: function () {
     this.setState({ismouseOver: true});
@@ -20159,8 +20180,8 @@ var StatBar = React.createClass({displayName: "StatBar",
     var width = this.state.width;
     // If the bar isn't full, keep animating
     if (width < this.props.data.score*57) {
-      requestAnimationFrame(this.fillBar);
       this.setState({width: width + 4});
+      requestAnimationFrame(this.fillBar);
     }
   },
   render: function () {
@@ -20240,7 +20261,7 @@ var StatGem = React.createClass({displayName: "StatGem",
       var angle = initial + increment * i;
 
       // The radius is scaled so the resulting animation can stretch to the edge of the pentagon
-      var radius = this.props.data[key].score * 20;
+      var radius = this.props.data[key].score * 29;
       var x = this.calculateX(0, radius, angle);
       var y = this.calculateY(0, radius, angle);
 
@@ -20332,14 +20353,14 @@ var StatGem = React.createClass({displayName: "StatGem",
       WebkitClipPath: 'polygon(' + coordinates + ')'
     };
 
-    // Return grade bubbles
-    
+    // Return grade bubbles  
     var grades = this.props.stats.map(function (key, index) {
       var data = this.props.data[key];
       var className = 'bubble' + index;
 
       return(
-        React.createElement(GradeBubble, {key: data.label, className: className, grade: data.grade, label: data.label})
+        React.createElement(GradeBubble, {key: data.label, className: className, grade: data.grade, 
+        label: data.label, initialValue: data.initialValue})
       );
     }.bind(this));
     return (
@@ -20365,7 +20386,8 @@ var StreamComparer = React.createClass({displayName: "StreamComparer",
   getDefaultProps: function () {
     return {
       data: [],
-      onGemAnimationComplete: null 
+      onGemAnimationComplete: null,
+      beginComparison: false
     };
   },
   
@@ -20376,8 +20398,8 @@ var StreamComparer = React.createClass({displayName: "StreamComparer",
       count++;
       var className = count == 1 ? 'right' : 'left';
       return (
-          React.createElement(StreamDetail, {className: className, key: streamData.id, data: streamData, 
-          onGemAnimationComplete: this.props.onGemAnimationComplete})
+        React.createElement(StreamDetail, {className: className, key: streamData.id, data: streamData, 
+        onGemAnimationComplete: this.props.onGemAnimationComplete})
       );
     }.bind(this));
     return (
@@ -20454,11 +20476,14 @@ module.exports = StreamList;
 },{"./SmallStream.react":163,"react":156}],169:[function(require,module,exports){
 var React = require('react');
 var Indicator = require('./Indicator.react');
+var AppButton = require('./AppButton.react');
 
 var StreamProfile = React.createClass({displayName: "StreamProfile",
   getDefaultProps: function () {
     return {
-      data: {}
+      data: {},
+      buttonEnabled: false,
+      buttonOnClick: null
     };
   },
   
@@ -20490,4 +20515,4 @@ var StreamProfile = React.createClass({displayName: "StreamProfile",
 
 module.exports = StreamProfile;
 
-},{"./Indicator.react":161,"react":156}]},{},[157]);
+},{"./AppButton.react":158,"./Indicator.react":161,"react":156}]},{},[157]);

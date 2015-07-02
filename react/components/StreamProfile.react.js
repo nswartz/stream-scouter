@@ -1,10 +1,13 @@
 var React = require('react');
 var Indicator = require('./Indicator.react');
+var AppButton = require('./AppButton.react');
 
 var StreamProfile = React.createClass({
   getDefaultProps: function () {
     return {
-      data: {}
+      data: {},
+      buttonEnabled: false,
+      buttonOnClick: null
     };
   },
   

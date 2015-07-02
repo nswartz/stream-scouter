@@ -19,12 +19,15 @@ var AppButton = React.createClass({
     var style = {
       boxShadow: 'inset 10px 10px 5px 0px rgba(0,0,0,0.45)'
     }
-    this.setState({style: style});
+
+    if (this.props.enabled)
+      this.setState({style: style});
   },
-  handleMouseUp: function (e) {
+  handleMouseUpOut: function (e) {
     e.preventDefault();
 
-    this.setState({style: {}});
+    if (this.props.enabled)
+      this.setState({style: {}});
   },
   handleClick: function (e) {
     e.preventDefault();
@@ -39,7 +42,7 @@ var AppButton = React.createClass({
     className += this.props.label;
     return (
       <div className={className} style={this.state.style} onClick={this.handleClick} 
-      onMouseDown={this.handleMouseDown} onMouseUp={this.handleMouseUp}>
+      onMouseDown={this.handleMouseDown} onMouseUp={this.handleMouseUpOut} onMouseOut={this.handleMouseUpOut}>
         {this.props.label}
       </div>
     );
