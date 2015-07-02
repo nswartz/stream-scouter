@@ -1,5 +1,9 @@
-var config = require('../config')
 var request = require('request');
+
+var config;
+if(!process.env.TWITCHID) 
+  config = require('../config');
+
 
 module.exports = function (io) { 
   var twitchData = null;
@@ -33,8 +37,9 @@ module.exports = function (io) {
     function refreshData(batchSize) {
       batchSize = batchSize || 1;
       
+      var url = process.env.TWITCHROOT || config.twitchApiRoot;
       var options = {
-        url: (process.env.TWITCHROOT || config.twitchApiRoot) + '/beta/streams/random',
+        url: url + '/beta/streams/random',
         method: 'GET',
         headers: headers
       };

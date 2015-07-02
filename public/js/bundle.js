@@ -20033,7 +20033,7 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 
     } else if (!streamData[index].selected && numSelected < 2) {
       streamData[index].selected = true;
-      numSelected++
+      numSelected++;
     }
 
     // If there are two streams selected, enable the compare button
@@ -20041,7 +20041,7 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
   },
   handleRefreshClick: function () {
     // Don't want to spam click the refresh while updating
-    this.setState({refreshEnabled: false});
+    this.setState({refreshEnabled: false, compareEnabled: false});
     this.requestUpdate();
   },
   handleCompareClick: function () {
@@ -20052,13 +20052,13 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
       streams.forEach(function (stream) {
         this.modifyDeselect(stream.id, 'powerLevel', false);
       }.bind(this));
-      this.setState({beginComparison: true});
+      this.setState({beginComparison: true, refreshEnabled: false});
     }
   },
   handlePowerAnimationComplete: function (streamId) {
     // Power level takes a moment to animate
     this.modifyDeselect(streamId, 'powerLevel', true);
-    this.setState({beginComparison: false});
+    this.setState({beginComparison: false, refreshEnabled: true});
   },
   handleGemAnimationComplete: function (streamId) {
     // This should be called when the StatGem finishes animating. It usually takes a while
