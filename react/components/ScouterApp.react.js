@@ -24,8 +24,6 @@ var ScouterApp = React.createClass({
 				this.setState({refreshEnabled: true});
      	}.bind(this), 3000); 
     }.bind(this));
-    // Request the Twitch data through the socket
-    this.requestUpdate();
   },
 
   handleChannelClick: function (streamId) {
@@ -105,10 +103,14 @@ var ScouterApp = React.createClass({
       };
     }.bind(this));
     var compareData = this.getSelectedStreams();
+    // Add a flag for whether it is safe to deselect the profile
+    compareData.forEach(function (data) {
+      data.canDeselect = this.state.canDeselect.indexOf(data.id) > -1 ? true : false;
+    }.bind(this));
     return (
       <div className='scouterApp'>
         <StreamComparer data={compareData} onGemAnimationComplete={this.handleGemAnimationComplete} 
-        beginComparison={this.state.beginComparison} />
+        beginComparison={this.state.beginComparison} onChannelClick={this.handleChannelClick}/>
         <CenterColumn data={listData} onChannelClick={this.handleChannelClick} onRefreshClick={this.handleRefreshClick} 
         onCompareClick={this.handleCompareClick} refreshEnabled={this.state.refreshEnabled} compareEnabled={this.state.compareEnabled} />
       </div>    

@@ -20012,8 +20012,6 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 				this.setState({refreshEnabled: true});
      	}.bind(this), 3000); 
     }.bind(this));
-    // Request the Twitch data through the socket
-    this.requestUpdate();
   },
 
   handleChannelClick: function (streamId) {
@@ -20093,10 +20091,14 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
       };
     }.bind(this));
     var compareData = this.getSelectedStreams();
+    // Add a flag for whether it is safe to deselect the profile
+    compareData.forEach(function (data) {
+      data.canDeselect = this.state.canDeselect.indexOf(data.id) > -1 ? true : false;
+    }.bind(this));
     return (
       React.createElement("div", {className: "scouterApp"}, 
         React.createElement(StreamComparer, {data: compareData, onGemAnimationComplete: this.handleGemAnimationComplete, 
-        beginComparison: this.state.beginComparison}), 
+        beginComparison: this.state.beginComparison, onChannelClick: this.handleChannelClick}), 
         React.createElement(CenterColumn, {data: listData, onChannelClick: this.handleChannelClick, onRefreshClick: this.handleRefreshClick, 
         onCompareClick: this.handleCompareClick, refreshEnabled: this.state.refreshEnabled, compareEnabled: this.state.compareEnabled})
       )    
@@ -20387,7 +20389,9 @@ var StreamComparer = React.createClass({displayName: "StreamComparer",
     return {
       data: [],
       onGemAnimationComplete: null,
-      beginComparison: false
+      beginComparison: false,
+      onChannelClick: null,
+      canDeselect: false
     };
   },
   
@@ -20399,7 +20403,7 @@ var StreamComparer = React.createClass({displayName: "StreamComparer",
       var className = count == 1 ? 'right' : 'left';
       return (
         React.createElement(StreamDetail, {className: className, key: streamData.id, data: streamData, 
-        onGemAnimationComplete: this.props.onGemAnimationComplete})
+        onGemAnimationComplete: this.props.onGemAnimationComplete, onChannelClick: this.props.onChannelClick})
       );
     }.bind(this));
     return (
@@ -20422,7 +20426,8 @@ var StreamDetail = React.createClass({displayName: "StreamDetail",
   getDefaultProps: function () {
     return {
       data: {},
-      className: 'right'
+      className: 'right',
+      onChannelClick: null
     };
   },
 
@@ -20434,7 +20439,7 @@ var StreamDetail = React.createClass({displayName: "StreamDetail",
     var className = 'streamDetail ' + this.props.className;
     return (
       React.createElement("div", {className: className}, 
-        React.createElement(StreamProfile, {data: this.props.data}), 
+        React.createElement(StreamProfile, {data: this.props.data, onChannelClick: this.props.onChannelClick}), 
         React.createElement(StatBar, {data: this.props.data.stats.views}), 
         React.createElement(StatBar, {data: this.props.data.stats.followers}), 
         React.createElement(StatGem, {data: this.props.data.stats, onGemAnimationComplete: this.handleGemAnimationComplete})
@@ -20482,9 +20487,16 @@ var StreamProfile = React.createClass({displayName: "StreamProfile",
   getDefaultProps: function () {
     return {
       data: {},
-      buttonEnabled: false,
-      buttonOnClick: null
+      onChannelClick: null
     };
+  },
+
+  handleProfileClick: function () {
+    var streamId = this.props.data.id;
+
+    // Deselect the stream profile if the picture is clicked
+    if (this.props.data.canDeselect)
+      this.props.onChannelClick(streamId);
   },
   
   render: function () {
@@ -20496,7 +20508,7 @@ var StreamProfile = React.createClass({displayName: "StreamProfile",
           this.props.data.name
         ), 
         React.createElement("div", {className: "logo"}, 
-          React.createElement("img", {src: this.props.data.logo})
+          React.createElement("img", {src: this.props.data.logo, onClick: this.handleProfileClick})
         ), 
         React.createElement("div", {className: "game"}, 
           "playing ", this.props.data.game

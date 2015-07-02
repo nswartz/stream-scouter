@@ -6,9 +6,16 @@ var StreamProfile = React.createClass({
   getDefaultProps: function () {
     return {
       data: {},
-      buttonEnabled: false,
-      buttonOnClick: null
+      onChannelClick: null
     };
+  },
+
+  handleProfileClick: function () {
+    var streamId = this.props.data.id;
+
+    // Deselect the stream profile if the picture is clicked
+    if (this.props.data.canDeselect)
+      this.props.onChannelClick(streamId);
   },
   
   render: function () {
@@ -20,7 +27,7 @@ var StreamProfile = React.createClass({
           {this.props.data.name}
         </div>
         <div className='logo'>
-          <img src={this.props.data.logo} />
+          <img src={this.props.data.logo} onClick={this.handleProfileClick} />
         </div>  
         <div className='game'>
           playing {this.props.data.game}

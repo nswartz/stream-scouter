@@ -6,7 +6,9 @@ var StreamComparer = React.createClass({
     return {
       data: [],
       onGemAnimationComplete: null,
-      beginComparison: false
+      beginComparison: false,
+      onChannelClick: null,
+      canDeselect: false
     };
   },
   
@@ -18,7 +20,7 @@ var StreamComparer = React.createClass({
       var className = count == 1 ? 'right' : 'left';
       return (
         <StreamDetail className={className} key={streamData.id} data={streamData} 
-        onGemAnimationComplete={this.props.onGemAnimationComplete} />
+        onGemAnimationComplete={this.props.onGemAnimationComplete} onChannelClick={this.props.onChannelClick} />
       );
     }.bind(this));
     return (

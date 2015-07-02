@@ -18,9 +18,11 @@ module.exports = function (io) {
     // Log the connection
     console.log('new twitch socket connected: ' + socket.handshake.address);
     
-    // Get 10 random streams for the initial data
+    // Get 40 random streams for the initial data
     if (!twitchData)
-      refreshData(40);    
+      refreshData(40);
+    else
+      pushDataToClient();    
     
     // Refresh data when requested    
     socket.on('request update', function (batchSize) {
@@ -110,12 +112,13 @@ module.exports = function (io) {
           // 3 hour stream duration for maximum points
           var hour = 60 * 60 * 1000;
           var duration = (new Date()).getTime() - Date.parse(data);
-          data = data / hour;
+          data = duration / hour;
           score = duration / (3 * hour);
           break;
         case 'Star Power':
           // Random value between [0,1) (I needed a 5th stat)
           score = Math.random();
+          data = score;
           break;      
         case 'Views':
           // Page views are relatively easy to get
@@ -138,10 +141,10 @@ module.exports = function (io) {
         score = .5;   
       
       return {
-        score: Math.round(score * 2) / 2,
+        score: Math.round(score * 100) / 100,
         grade: grades[Math.floor(score)],
         label: dataType,
-        initialValue: data
+        initialValue: Math.round(data * 100) / 100
       };
     }
     

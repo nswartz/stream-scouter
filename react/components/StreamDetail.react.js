@@ -7,7 +7,8 @@ var StreamDetail = React.createClass({
   getDefaultProps: function () {
     return {
       data: {},
-      className: 'right'
+      className: 'right',
+      onChannelClick: null
     };
   },
 
@@ -19,7 +20,7 @@ var StreamDetail = React.createClass({
     var className = 'streamDetail ' + this.props.className;
     return (
       <div className={className}>
-        <StreamProfile data={this.props.data} />
+        <StreamProfile data={this.props.data} onChannelClick={this.props.onChannelClick} />
         <StatBar data={this.props.data.stats.views} />
         <StatBar data={this.props.data.stats.followers} />
         <StatGem data={this.props.data.stats} onGemAnimationComplete={this.handleGemAnimationComplete} />
