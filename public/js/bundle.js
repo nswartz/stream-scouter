@@ -19858,6 +19858,7 @@ var AppButton = React.createClass({displayName: "AppButton",
     if (this.props.enabled)
       this.props.onButtonClick();
   },
+  
   render: function () {
     // Add a class to the element when it is selected
     var className = this.props.enabled ? 'appButton ' : 'appButton disabled ';
@@ -19935,6 +19936,7 @@ var GradeBubble = React.createClass({displayName: "GradeBubble",
   handleMouseOut: function () {
     this.setState({mouseOver: false, clicked: false});
   },
+  
   render: function () {
     // Show label based on whether the mouse is over the element and if the user clicked the element
     var label = this.state.mouseOver ? this.state.clicked ? this.props.initialValue : this.props.label : this.props.grade;
@@ -20024,13 +20026,10 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 
     // If the stream is selected and it is allowed to be deselected, deselect it
     // Otherwise select it as long as there are less than 2 already selected
-    var newDeselect = this.state.canDeselect.slice();
-
     if (streamData[index].selected) {
       streamData[index].selected = false;
-      var i = this.state.canDeselect.indexOf(streamId);  
-      newDeselect.splice(i, 1);
       numSelected--;
+      this.removeDeselect(streamId);
 
     } else if (!streamData[index].selected && numSelected < 2) {
       streamData[index].selected = true;
@@ -20038,7 +20037,7 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
     }
 
     // If there are two streams selected, enable the compare button
-    this.setState({data: streamData, canDeselect: newDeselect, compareEnabled: numSelected === 2});
+    this.setState({data: streamData, compareEnabled: numSelected === 2});
   },
   handleRefreshClick: function () {
     // Don't want to spam click the refresh while updating
@@ -20047,16 +20046,71 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
   },
   handleCompareClick: function () {
     // If two streams are selected, we can compare them
-    this.setState({beginComparison: true});
+    if (this.state.compareEnabled) {
+      // Get the selected streams and update canDeselect
+      var streams = this.getSelectedStreams();
+      streams.forEach(function (stream) {
+        this.modifyDeselect(stream.id, 'powerLevel', false);
+      }.bind(this));
+      this.setState({beginComparison: true});
+    }
+  },
+  handlePowerAnimationComplete: function (streamId) {
+    // Power level takes a moment to animate
+    this.modifyDeselect(streamId, 'powerLevel', true);
+    this.setState({beginComparison: false});
   },
   handleGemAnimationComplete: function (streamId) {
     // This should be called when the StatGem finishes animating. It usually takes a while
     // longer, so we can use this function to signal that it is safe to deselect that profile
+    this.modifyDeselect(streamId, 'statGem', true);
+  },
+  modifyDeselect: function (streamId, key, enabled) {
+    // There are several conditons that must be met for a stream to deselect, this function
+    // will handle changing that particular state property
     var newDeselect = this.state.canDeselect.slice();
-    newDeselect.push(streamId);
+    var index = newDeselect.map(function (streamData) {
+      return streamData.id;
+    }).indexOf(streamId);
+
+    // If canDeselect does not contain this streamId, then add it
+    if (index == -1) {
+      var newO = {};
+      newO.id = streamId;
+      newO[key] = enabled;
+
+      newDeselect.push(newO);
+    } else {
+      // Otherwise modify the existing object
+      newDeselect[index][key] = enabled;
+    }
 
     this.setState({canDeselect: newDeselect});
-  },  
+  },
+  removeDeselect: function (streamId) {
+    var newDeselect = this.state.canDeselect.filter(function (streamData) {
+      // Return all streams not equal to the streamId that will be removed
+      return streamData.id != streamId;
+    });
+
+    this.setState({canDeselect: newDeselect});
+  },
+  elementCanBeDeselected: function(streamId) {
+    // Returns true if an element had met all the criteria for being deselected
+    var streamData = this.state.canDeselect.filter(function (stream) {
+      return stream.id == streamId;
+    })[0];
+
+    if (streamData) {
+      var powerLevel = streamData.hasOwnProperty('powerLevel') ? streamData.powerLevel : true;
+      var statGem = streamData.statGem;
+
+      if (statGem && powerLevel)
+        return true;
+    }
+    
+    return false;
+  },
   getSelectedStreams: function () {
     // Returns 0-2 selected streams. Cloned so it is safe to modify them
     var clone = this.cloneObject(this.state.data);
@@ -20087,17 +20141,18 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
         streamId: streamData.id,
         selected: streamData.selected,
         // If the streamId is able to be deselected, set this property to true 
-        canDeselect: this.state.canDeselect.indexOf(streamData.id) > -1 ? true : false
+        canDeselect: this.elementCanBeDeselected(streamData.id)
       };
     }.bind(this));
     var compareData = this.getSelectedStreams();
     // Add a flag for whether it is safe to deselect the profile
-    compareData.forEach(function (data) {
-      data.canDeselect = this.state.canDeselect.indexOf(data.id) > -1 ? true : false;
+    compareData.forEach(function (streamData) {
+      streamData.canDeselect = this.elementCanBeDeselected(streamData.id);
     }.bind(this));
     return (
       React.createElement("div", {className: "scouterApp"}, 
-        React.createElement(StreamComparer, {data: compareData, onGemAnimationComplete: this.handleGemAnimationComplete, 
+        React.createElement(StreamComparer, {data: compareData, onPowerAnimationComplete: this.handlePowerAnimationComplete, 
+        onGemAnimationComplete: this.handleGemAnimationComplete, 
         beginComparison: this.state.beginComparison, onChannelClick: this.handleChannelClick}), 
         React.createElement(CenterColumn, {data: listData, onChannelClick: this.handleChannelClick, onRefreshClick: this.handleRefreshClick, 
         onCompareClick: this.handleCompareClick, refreshEnabled: this.state.refreshEnabled, compareEnabled: this.state.compareEnabled})
@@ -20168,9 +20223,6 @@ var StatBar = React.createClass({displayName: "StatBar",
   componentDidMount: function () {
     this.fillBar();
   },
-  componentWillUnmount: function () {
-    cancelAnimationFrame(this.fillBar);
-  },
   
   handleMouseOver: function () {
     this.setState({ismouseOver: true});
@@ -20184,8 +20236,11 @@ var StatBar = React.createClass({displayName: "StatBar",
     if (width < this.props.data.score*57) {
       this.setState({width: width + 4});
       requestAnimationFrame(this.fillBar);
+    } else {
+      cancelAnimationFrame(this.fillBar);
     }
   },
+
   render: function () {
     // A representation of a given stat in a 'meter' format
     var barStyle = {
@@ -20337,6 +20392,7 @@ var StatGem = React.createClass({displayName: "StatGem",
       // If complete, signal that it is safe to unmount this component
       this.props.onGemAnimationComplete();
   },
+  
   render: function () {
     // A representation of a set of 5 stats given in a 'gem' format
     // This is the progress for the clip path animation. The first and last values will match
@@ -20391,18 +20447,40 @@ var StreamComparer = React.createClass({displayName: "StreamComparer",
       onGemAnimationComplete: null,
       beginComparison: false,
       onChannelClick: null,
-      canDeselect: false
+      canDeselect: false,
+      // These are the default fields used to compare
+      statKeys: ['viewers', 'fps', 'resolution', 'duration', 'starPower'],
+      weights: [10000, 2000, 2000, 1500, 1000]
     };
   },
-  
+
+  calculatePowerLevel: function (stats) {
+    // Calculates a number based on the stream stats
+    var powerLevel = 0;
+    this.props.statKeys.forEach(function (key, index) {
+      // The scores are already normalized, so then calculate the power
+      // based on these arbitrary weights
+      powerLevel += stats[key].score * this.props.weights[index];
+    }.bind(this));
+
+    return powerLevel;
+  },
+
   render: function () {
     // Render 0-2 detail views
     var count = 0;
     var detailViews = this.props.data.map(function (streamData) {
       count++;
       var className = count == 1 ? 'right' : 'left';
+     
+      // Only calculate a power level if we can begin comparing
+      var powerLevel = 0;
+      if (this.props.beginComparison) {
+        powerLevel = this.calculatePowerLevel(streamData.stats);
+      }     
       return (
-        React.createElement(StreamDetail, {className: className, key: streamData.id, data: streamData, 
+        React.createElement(StreamDetail, {className: className, key: streamData.id, data: streamData, powerLevel: powerLevel, 
+        onPowerAnimationComplete: this.props.onPowerAnimationComplete, 
         onGemAnimationComplete: this.props.onGemAnimationComplete, onChannelClick: this.props.onChannelClick})
       );
     }.bind(this));
@@ -20427,7 +20505,9 @@ var StreamDetail = React.createClass({displayName: "StreamDetail",
     return {
       data: {},
       className: 'right',
-      onChannelClick: null
+      onChannelClick: null,
+      onPowerAnimationComplete: null,
+      powerLevel: 0
     };
   },
 
@@ -20435,11 +20515,13 @@ var StreamDetail = React.createClass({displayName: "StreamDetail",
     // Pass the stream id up the chain
     this.props.onGemAnimationComplete(this.props.data.id);
   },
+
   render: function () {
     var className = 'streamDetail ' + this.props.className;
     return (
       React.createElement("div", {className: className}, 
-        React.createElement(StreamProfile, {data: this.props.data, onChannelClick: this.props.onChannelClick}), 
+        React.createElement(StreamProfile, {data: this.props.data, powerLevel: this.props.powerLevel, 
+        onPowerAnimationComplete: this.props.onPowerAnimationComplete, onChannelClick: this.props.onChannelClick}), 
         React.createElement(StatBar, {data: this.props.data.stats.views}), 
         React.createElement(StatBar, {data: this.props.data.stats.followers}), 
         React.createElement(StatGem, {data: this.props.data.stats, onGemAnimationComplete: this.handleGemAnimationComplete})
@@ -20487,23 +20569,74 @@ var StreamProfile = React.createClass({displayName: "StreamProfile",
   getDefaultProps: function () {
     return {
       data: {},
-      onChannelClick: null
+      onChannelClick: null,
+      onPowerAnimationComplete: null,
+      powerLevel: 0
+    };
+  },
+  getInitialState: function () {
+    return {
+      currentLevel: 0,
+      powerLevel: 0,
+      animating: false
     };
   },
 
+  componentWillReceiveProps: function (newProps) {
+    // Start comparing if we have a truthy power level
+    if (newProps.powerLevel) {
+      this.setState({powerLevel: newProps.powerLevel});
+      setTimeout(function () {
+        // Bad design, but give the state a moment to update before calling
+        this.animatePowerLevel();
+      }.bind(this), 100);     
+    }    
+  },
+
+  animatePowerLevel: function () {
+    if (this.state.currentLevel < this.state.powerLevel) {     
+      var step = this.state.powerLevel / 200;
+      // I don't like the least significant digit staying static aesthetically
+      var nextLevel = Math.round(this.state.currentLevel + step + (Math.random() * 10));
+
+      this.setState({currentLevel: nextLevel, animating: true});
+      requestAnimationFrame(this.animatePowerLevel);
+    } else {
+      cancelAnimationFrame(this.animatePowerLevel);
+      this.setState({animating: false});
+      this.handleAnimationComplete();
+    }
+  },
+  handleAnimationComplete: function () {
+    var streamId = this.props.data.id;
+
+    if (!this.state.animating)
+      this.props.onPowerAnimationComplete(streamId);
+  },
   handleProfileClick: function () {
     var streamId = this.props.data.id;
 
     // Deselect the stream profile if the picture is clicked
-    if (this.props.data.canDeselect)
+    if (this.props.data.canDeselect && !this.state.animating)
       this.props.onChannelClick(streamId);
   },
   
   render: function () {
     // [Jankily] remove the http://www. from the url for display purposes
     var shortUrl = this.props.data.url.slice(11, Number.MAX_VALUE);
+
+    // Determine if a powerLevel div needs to be included
+    var powerLevel;
+    if (this.state.currentLevel)
+      powerLevel = this.state.currentLevel;
+    else
+      powerLevel = '';
+    
     return (
       React.createElement("div", {className: "streamProfile"}, 
+        React.createElement("div", {className: "powerLevel"}, 
+          powerLevel
+        ), 
         React.createElement("div", {className: "name"}, 
           this.props.data.name
         ), 

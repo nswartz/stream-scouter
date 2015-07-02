@@ -21,9 +21,6 @@ var StatBar = React.createClass({
   componentDidMount: function () {
     this.fillBar();
   },
-  componentWillUnmount: function () {
-    cancelAnimationFrame(this.fillBar);
-  },
   
   handleMouseOver: function () {
     this.setState({ismouseOver: true});
@@ -37,8 +34,11 @@ var StatBar = React.createClass({
     if (width < this.props.data.score*57) {
       this.setState({width: width + 4});
       requestAnimationFrame(this.fillBar);
+    } else {
+      cancelAnimationFrame(this.fillBar);
     }
   },
+
   render: function () {
     // A representation of a given stat in a 'meter' format
     var barStyle = {

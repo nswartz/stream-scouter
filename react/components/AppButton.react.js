@@ -36,6 +36,7 @@ var AppButton = React.createClass({
     if (this.props.enabled)
       this.props.onButtonClick();
   },
+  
   render: function () {
     // Add a class to the element when it is selected
     var className = this.props.enabled ? 'appButton ' : 'appButton disabled ';

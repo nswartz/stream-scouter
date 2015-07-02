@@ -125,6 +125,7 @@ var StatGem = React.createClass({
       // If complete, signal that it is safe to unmount this component
       this.props.onGemAnimationComplete();
   },
+  
   render: function () {
     // A representation of a set of 5 stats given in a 'gem' format
     // This is the progress for the clip path animation. The first and last values will match

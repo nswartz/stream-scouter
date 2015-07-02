@@ -36,13 +36,10 @@ var ScouterApp = React.createClass({
 
     // If the stream is selected and it is allowed to be deselected, deselect it
     // Otherwise select it as long as there are less than 2 already selected
-    var newDeselect = this.state.canDeselect.slice();
-
     if (streamData[index].selected) {
       streamData[index].selected = false;
-      var i = this.state.canDeselect.indexOf(streamId);  
-      newDeselect.splice(i, 1);
       numSelected--;
+      this.removeDeselect(streamId);
 
     } else if (!streamData[index].selected && numSelected < 2) {
       streamData[index].selected = true;
@@ -50,7 +47,7 @@ var ScouterApp = React.createClass({
     }
 
     // If there are two streams selected, enable the compare button
-    this.setState({data: streamData, canDeselect: newDeselect, compareEnabled: numSelected === 2});
+    this.setState({data: streamData, compareEnabled: numSelected === 2});
   },
   handleRefreshClick: function () {
     // Don't want to spam click the refresh while updating
@@ -59,16 +56,71 @@ var ScouterApp = React.createClass({
   },
   handleCompareClick: function () {
     // If two streams are selected, we can compare them
-    this.setState({beginComparison: true});
+    if (this.state.compareEnabled) {
+      // Get the selected streams and update canDeselect
+      var streams = this.getSelectedStreams();
+      streams.forEach(function (stream) {
+        this.modifyDeselect(stream.id, 'powerLevel', false);
+      }.bind(this));
+      this.setState({beginComparison: true});
+    }
+  },
+  handlePowerAnimationComplete: function (streamId) {
+    // Power level takes a moment to animate
+    this.modifyDeselect(streamId, 'powerLevel', true);
+    this.setState({beginComparison: false});
   },
   handleGemAnimationComplete: function (streamId) {
     // This should be called when the StatGem finishes animating. It usually takes a while
     // longer, so we can use this function to signal that it is safe to deselect that profile
+    this.modifyDeselect(streamId, 'statGem', true);
+  },
+  modifyDeselect: function (streamId, key, enabled) {
+    // There are several conditons that must be met for a stream to deselect, this function
+    // will handle changing that particular state property
     var newDeselect = this.state.canDeselect.slice();
-    newDeselect.push(streamId);
+    var index = newDeselect.map(function (streamData) {
+      return streamData.id;
+    }).indexOf(streamId);
+
+    // If canDeselect does not contain this streamId, then add it
+    if (index == -1) {
+      var newO = {};
+      newO.id = streamId;
+      newO[key] = enabled;
+
+      newDeselect.push(newO);
+    } else {
+      // Otherwise modify the existing object
+      newDeselect[index][key] = enabled;
+    }
 
     this.setState({canDeselect: newDeselect});
-  },  
+  },
+  removeDeselect: function (streamId) {
+    var newDeselect = this.state.canDeselect.filter(function (streamData) {
+      // Return all streams not equal to the streamId that will be removed
+      return streamData.id != streamId;
+    });
+
+    this.setState({canDeselect: newDeselect});
+  },
+  elementCanBeDeselected: function(streamId) {
+    // Returns true if an element had met all the criteria for being deselected
+    var streamData = this.state.canDeselect.filter(function (stream) {
+      return stream.id == streamId;
+    })[0];
+
+    if (streamData) {
+      var powerLevel = streamData.hasOwnProperty('powerLevel') ? streamData.powerLevel : true;
+      var statGem = streamData.statGem;
+
+      if (statGem && powerLevel)
+        return true;
+    }
+    
+    return false;
+  },
   getSelectedStreams: function () {
     // Returns 0-2 selected streams. Cloned so it is safe to modify them
     var clone = this.cloneObject(this.state.data);
@@ -99,17 +151,18 @@ var ScouterApp = React.createClass({
         streamId: streamData.id,
         selected: streamData.selected,
         // If the streamId is able to be deselected, set this property to true 
-        canDeselect: this.state.canDeselect.indexOf(streamData.id) > -1 ? true : false
+        canDeselect: this.elementCanBeDeselected(streamData.id)
       };
     }.bind(this));
     var compareData = this.getSelectedStreams();
     // Add a flag for whether it is safe to deselect the profile
-    compareData.forEach(function (data) {
-      data.canDeselect = this.state.canDeselect.indexOf(data.id) > -1 ? true : false;
+    compareData.forEach(function (streamData) {
+      streamData.canDeselect = this.elementCanBeDeselected(streamData.id);
     }.bind(this));
     return (
       <div className='scouterApp'>
-        <StreamComparer data={compareData} onGemAnimationComplete={this.handleGemAnimationComplete} 
+        <StreamComparer data={compareData} onPowerAnimationComplete={this.handlePowerAnimationComplete}
+        onGemAnimationComplete={this.handleGemAnimationComplete} 
         beginComparison={this.state.beginComparison} onChannelClick={this.handleChannelClick}/>
         <CenterColumn data={listData} onChannelClick={this.handleChannelClick} onRefreshClick={this.handleRefreshClick} 
         onCompareClick={this.handleCompareClick} refreshEnabled={this.state.refreshEnabled} compareEnabled={this.state.compareEnabled} />
