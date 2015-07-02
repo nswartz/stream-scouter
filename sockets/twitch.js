@@ -8,7 +8,7 @@ module.exports = function (io) {
   // This will be static for the moment
   var headers = {
     'Accept': 'application/vnd.twitchtv.v3+json',
-    'Client-Id': config.twitchClientId
+    'Client-Id': process.env.TWITCHID || config.twitchClientId
   };
 
   // Namespace all activity for this socket
@@ -34,7 +34,7 @@ module.exports = function (io) {
       batchSize = batchSize || 1;
       
       var options = {
-        url: config.twitchApiRoot + '/beta/streams/random',
+        url: (process.env.TWITCHROOT || config.twitchApiRoot) + '/beta/streams/random',
         method: 'GET',
         headers: headers
       };
