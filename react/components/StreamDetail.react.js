@@ -10,7 +10,11 @@ var StreamDetail = React.createClass({
       className: 'right'
     };
   },
-  
+
+  handleGemAnimationComplete: function () {
+    // Pass the stream id up the chain
+    this.props.onGemAnimationComplete(this.props.data.id);
+  },
   render: function () {
     var className = 'streamDetail ' + this.props.className;
     return (
@@ -18,7 +22,7 @@ var StreamDetail = React.createClass({
         <StreamProfile data={this.props.data} />
         <StatBar data={this.props.data.stats.views} />
         <StatBar data={this.props.data.stats.followers} />
-        <StatGem data={this.props.data.stats} />
+        <StatGem data={this.props.data.stats} onGemAnimationComplete={this.handleGemAnimationComplete} />
       </div>
     );
   }

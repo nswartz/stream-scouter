@@ -1,5 +1,5 @@
 body {
-  font: 32px "Open Sans", 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font: 25px "Open Sans", 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: bold;
   color: white;
 }
@@ -18,47 +18,240 @@ a {
   background-color: white;
 }
 
-  #app-column {
-    width: 1100px;
+.appButton {
+  width: 150px;
+  height: 100px;
+  
+  position: absolute;
+  line-height: 100px;
+  text-align: center;
+  border-radius: 20px;
+}
+  .appButton.Refresh {
+    background-color: green;
+    top: 40px;
+    left: 40px;
+  }
+  .appButton.Compare {
+    background-color: red;
+    top: 40px;
+    right: 40px;
+  }
+    
+.centerColumn {
+  width: 1000px;
+  
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 10px;
+  bottom: 10px;
+  margin: auto;
+  
+  background-color: #D9DDE0;
+  border-radius: 20px;
+}
+  
+  .appHeader {
+    width: 100%;
+    height: 140px;
+   
+    font-size: 75px; 
+    text-align: center;
+    line-height: 140px;
+    
+    padding-top: 20px;
+    padding-bottom: 20px;   
+    background-color: #6441a5;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+  }
+    
+.streamList {
+  position: absolute;
+  top: 180px;
+  bottom: 0;
+  
+  padding: 25px;
+  overflow-y: scroll;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+} 
+  .smallStream {
+    width: 210px;
+    height: 210px;
+    
+    margin-bottom: 30px;
+    
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;    
+  }
+    .smallStream img {
+      width: 100%;
+      height: 100%;
+    }
+  .smallStream.selected {
+    box-shadow: #6441a5 0 0 0 10px;
+  }
+      
+.streamDetail {
+  width: 420px;
+  
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  
+  padding: 10px;
+  background-color: #6441a5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+  .streamDetail.left {
+    left: 10px;
+  }
+  .streamDetail.right {
+    right: 10px;
+  }
+  .streamProfile {
+    text-align: center;
+    margin: 10px;
+  }
+    .streamProfile .logo {
+      text-align: center;  
+    }
+      .streamProfile .logo img {
+        width: 250px;
+        height: 250px;
+        
+        border-radius: 20px;
+        overflow: hidden;
+      }
+    .streamProfile .name {
+      font-size: 40px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+.indicatorContainer {
+  margin-top: 10px;
+} 
+  .indicatorContainer div {
+    display: inline-block;
+    margin-left: 10px;
+    margin-right: 10px;
+  }   
+  .indicator {
+    width: 25px;
+    height: 25px;
+    
+    margin-bottom: -5px;
+    
+    background-color: goldenrod;
+    border-radius: 12.5px;  
+  }
+    .indicator.active {
+      background-color: yellow;
+      box-shadow: 0px 0px 15px 5px yellow;
+    }
+
+.statBarContainer {
+  height: 50px;
+  
+  position: relative;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  
+  background-color: black;
+  border-radius: 10px;
+}
+  .statBarContainer .name {   
+    height: 30px;
+    width: 100px;
+       
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding-left: 5px;
+    
+    border-radius: 5px;
+    background-color: #6441a5;
+    line-height: 30px;
+    font-size: 20px;
+  }
+    
+  .statBar {
+    height: 30px;
+    
+    position: relative;
+    left: 125px;
+    top: 10px;
+    
+    border-radius: 5px;
+    background-color: yellow;
+    box-shadow: 0px 0px 15px 5px yellow;
+  }
+
+.statGem {
+  height: 330px;
+  
+  position: relative;
+  text-align: center;
+}
+  .statGem .gem {
+    width: 320px;
+    height: 320px;
     
     position: absolute;
+    top: 0;
     left: 0;
     right: 0;
-    top: 10px;
-    bottom: 10px;
-    margin: auto;
-    
-    background-color: #D9DDE0;
-    border-radius: 20px;
+    bottom: 0;
+    margin: auto;   
+  }
+  .statGem .stats {
+    background-color: #6441a5;
+    /* Temp value because the gem is not centered in the div */
+    top: 25px;
   }
   
-    #app-header {
-      width: 100%;
-     
-      font-size: 120px; 
-      text-align: center;
-      
-      padding-top: 20px;
-      padding-bottom: 20px;   
-      background-color: #6441a5;
-      border-top-left-radius: 20px;
-      border-top-right-radius: 20px;
-    }
+.gradeBubble {
+  width: 30px;
+  height: 30px;
+  
+  position: absolute;
+  
+  font-size: 25px;
+  text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
+  line-height: 30px;
+  border-radius: 30px;
+  background-color: #6441a5;
+  border: black solid 5px;
+}
+  .gradeBubble.bubble0 {
+    top: -5px;
+    left: 141px;
+  }
+  .gradeBubble.bubble1 {
+    top: 105px;
+    left: -10px;
+  }
+  .gradeBubble.bubble2 {
+    bottom: -2px;
+    left: 48px;
+  }
+  .gradeBubble.bubble3 {
+    bottom: -2px;
+    right: 48px;
+  }
+  .gradeBubble.bubble4 {
+    top: 105px;
+    right: -10px;
+  }
+  .gradeBubble .label {
+    width: 200px;
     
-  .streamList {
-    padding: 20px;
-  } 
-    .smallStream {
-      width: 250px;
-      height: 250px;
-      
-      border-radius: 20px;
-      overflow: hidden;      
-    }
-      .smallStream img {
-        width: 100%;
-        height: 100%;
-      }
-    .smallStream.selected {
-      box-shadow: #6441a5 0 0 20px 3px;
-    }
+    position: absolute;
+    left: -85px;
+  }

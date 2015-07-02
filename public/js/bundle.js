@@ -19819,7 +19819,128 @@ React.render(
   document.getElementById('app-mount')
 );
 
-},{"./components/ScouterApp.react":159,"react":156}],158:[function(require,module,exports){
+},{"./components/ScouterApp.react":162,"react":156}],158:[function(require,module,exports){
+var React = require('react');
+
+var AppButton = React.createClass({displayName: "AppButton",
+  getDefaultProps: function () {
+    return { 
+      onButtonClick: null,
+      enabled: false,
+      label: ''
+    };
+  },
+
+  handleMouseDown: function (e) {
+    e.preventDefault();
+  },
+  handleMouseUp: function (e) {
+    e.preventDefault();
+  },
+  handleClick: function (e) {
+    e.preventDefault();
+
+    // Parent element will determine whether button is enabled
+    if (this.props.enabled)
+      this.props.onButtonClick();
+  },
+  render: function () {
+    // Add a class to the element when it is selected
+    var className = this.props.enabled ? 'appButton ' : 'appButton disabled ';
+    className += this.props.label;
+    return (
+      React.createElement("div", {className: className, onClick: this.handleClick, 
+      onMouseDown: this.handleMouseDown, onMouseUp: this.handleMouseUp}, 
+        this.props.label
+      )
+    );
+  }
+});
+
+module.exports = AppButton;
+
+},{"react":156}],159:[function(require,module,exports){
+var React = require('react');
+var StreamList = require('./StreamList.react');
+var AppButton = require('./AppButton.react');
+
+var CenterColumn = React.createClass({displayName: "CenterColumn",
+  getDefaultProps: function () {
+    return {
+      onRefreshClick: null,
+      onCompareClick: null,
+      refreshEnabled: false,
+      compareEnabled: false
+    };
+  },
+  getInitialState: function () {
+    return { 
+      data: [] 
+    };
+  },
+
+  render: function () {
+    // Used to contain the streams and buttons the app uses
+    return (
+      React.createElement("div", {className: "centerColumn"}, 
+        React.createElement("div", {className: "appHeader"}, "Stream Scouter"), 
+        React.createElement(AppButton, {label: "Refresh", enabled: this.props.refreshEnabled, onButtonClick: this.props.onRefreshClick}), 
+        React.createElement(AppButton, {label: "\"Compare\"", enabled: this.props.compareEnabled, onButtonClick: this.props.onCompareClick}), 
+        React.createElement(StreamList, {data: this.props.data, onChannelClick: this.props.onChannelClick})
+      )    
+    );
+  }
+});
+
+module.exports = CenterColumn;
+
+},{"./AppButton.react":158,"./StreamList.react":168,"react":156}],160:[function(require,module,exports){
+var React = require('react');
+
+var GradeBubble = React.createClass({displayName: "GradeBubble",
+  getDefaultProps: function () {
+    return {
+      grade: '',
+      label: '',
+      className: '',
+    };
+  },
+  getInitialState: function () {
+    return {
+      mouseOver: false
+    };
+  },
+
+  handleMouseOver: function () {
+    this.setState({mouseOver: true});
+  },
+  handleMouseOut: function () {
+    this.setState({mouseOver: false});
+  },
+  render: function () {
+    // Show label based on whether the mouse is over the element
+    var label = this.state.mouseOver ? this.props.label : this.props.grade;
+    var className = 'gradeBubble ' + this.props.className;
+
+    // Position element at the vertex provided
+    var style = {
+      left: this.props.positionX,
+      top: this.props.positionY
+    };
+    return (
+      React.createElement("div", {className: className, onMouseOver: this.handleMouseOver, 
+      onMouseOut: this.handleMouseOut, style: style}, 
+        React.createElement("div", {className: "label"}, 
+          label
+        )
+      )
+    );
+  }
+});
+
+module.exports = GradeBubble;
+
+},{"react":156}],161:[function(require,module,exports){
 var React = require('react');
 
 var Indicator = React.createClass({displayName: "Indicator",
@@ -19834,29 +19955,38 @@ var Indicator = React.createClass({displayName: "Indicator",
     // A small indicator where the 'active' class corresponds to its props
     var className = this.props.active ? 'indicator active' : 'indicator';
     return (
-      React.createElement("div", {className: className})
+      React.createElement("div", null, 
+        React.createElement("div", null, 
+          this.props.label, ":" 
+        ), 
+        React.createElement("div", {className: className})
+      ) 
     );
   }
 });
 
 module.exports = Indicator;
 
-},{"react":156}],159:[function(require,module,exports){
+},{"react":156}],162:[function(require,module,exports){
 var React = require('react');
 var StreamComparer = require('./StreamComparer.react');
-var StreamList = require('./StreamList.react');
+var CenterColumn = require('./CenterColumn.react');
 
 var ScouterApp = React.createClass({displayName: "ScouterApp",
   getInitialState: function () {
     return { 
-      data: [] 
+      data: [],
+      refreshEnabled: false,
+      compareEnabled: false,
+      canDeselect: []
     };
   },
   
-  componentWillMount: function () { 
+  componentDidMount: function () { 
     // Set up our socket that will be used to refresh data    
     this.props.socket.on('update client', function (data) {
-      this.setState({data: data});
+      // When the data comes back, we can populate our state data and enable refresh
+      this.setState({data: data, refreshEnabled: true});
     }.bind(this));
     // Request the Twitch data through the socket
     this.requestUpdate();
@@ -19867,33 +19997,60 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
     var streamData = this.cloneObject(this.state.data);
 
     // Find the index of the object clicked on (referenced by streamId)
-    var numSelected = 0;
-    var index = streamData.map(function (stream) {
-      // Because this iterates through the entire array, count selected streams
-      if (stream.selected)
-        numSelected++;
+    var index = this.getStreamIndexById(streamId);
+    var numSelected = this.getSelectedStreams().length;
 
-      return stream.id;
-    }).indexOf(streamId);
-
-    // If the stream is selected, unselect it
+    // If the stream is selected and it is allowed to be deselected, deselect it
     // Otherwise select it as long as there are less than 2 already selected
+    var newDeselect = this.state.canDeselect.slice();
+    
     if (streamData[index].selected) {
       streamData[index].selected = false;
+      var i = this.state.canDeselect.indexOf(streamId);  
+      newDeselect.splice(i, 1);
+
     } else if (!streamData[index].selected && numSelected < 2) {
       streamData[index].selected = true;
     }
 
-    this.setState({data: streamData});
+    this.setState({data: streamData, canDeselect: newDeselect});
   },
+  handleRefreshClick: function () {
+    // Don't want to spam click the refresh while updating
+    this.setState({requestEnabled: false});
+    this.requestUpdate();
+  },
+  handleCompareClick: function () {
+    // If two streams are selected, we can compare them
 
+  },
+  handleGemAnimationComplete: function (streamId) {
+    // This should be called when the StatGem finishes animating. It usually takes a while
+    // longer, so we can use this function to signal that it is safe to deselect that profile
+    var newDeselect = this.state.canDeselect.slice();
+    newDeselect.push(streamId);
+    this.setState({canDeselect: newDeselect });
+  },  
+  getSelectedStreams: function () {
+    // Returns 0-2 selected streams. Cloned so it is safe to modify them
+    var clone = this.cloneObject(this.state.data);
+    return clone.filter(function (streamData) {
+      return streamData.selected;
+    });
+  },
+  getStreamIndexById: function (streamId) {
+    // Find the index of the stream with the given Id
+    return this.state.data.map(function (stream) {
+      return stream.id;
+    }).indexOf(streamId);
+  },
   cloneObject: function (o) {
     // This will return a correct deep copy if the object is composed of primitive values
     return JSON.parse(JSON.stringify(o));
   },
   requestUpdate: function () {
     // Emit a request to the twitch socket to push new data to be rendered
-    this.props.socket.emit('request update');
+    this.props.socket.emit('request update', 40);
   },
 
   render: function () {
@@ -19902,16 +20059,17 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
       return {
         imgUrl: streamData.logo,
         streamId: streamData.id,
-        selected: streamData.selected
+        selected: streamData.selected,
+        // If the streamId is able to be deselected, set this property to true 
+        canDeselect: this.state.canDeselect.indexOf(streamData.id) > -1 ? true : false
       };
-    });
-    var compareData = this.state.data.filter(function (streamData) {
-      return streamData.selected;
-    });
+    }.bind(this));
+    var compareData = this.getSelectedStreams();
     return (
       React.createElement("div", {className: "scouterApp"}, 
-        React.createElement(StreamComparer, {data: compareData}), 
-        React.createElement(StreamList, {data: listData, onChannelClick: this.handleChannelClick})
+        React.createElement(StreamComparer, {data: compareData, onGemAnimationComplete: this.handleGemAnimationComplete}), 
+        React.createElement(CenterColumn, {data: listData, onChannelClick: this.handleChannelClick, onRefreshClick: this.handleRefreshClick, 
+        refreshEnabled: this.state.refreshEnabled, compareEnabled: this.state.compareEnabled})
       )    
     );
   }
@@ -19919,7 +20077,7 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
 
 module.exports = ScouterApp;
 
-},{"./StreamComparer.react":163,"./StreamList.react":165,"react":156}],160:[function(require,module,exports){
+},{"./CenterColumn.react":159,"./StreamComparer.react":166,"react":156}],163:[function(require,module,exports){
 var React = require('react');
 
 var SmallStream = React.createClass({displayName: "SmallStream",
@@ -19928,7 +20086,8 @@ var SmallStream = React.createClass({displayName: "SmallStream",
       data: {
         imgUrl: 'http://gaymerx.com/wp-content/uploads/2013/05/Question-Block.png',
         streamId: 0,
-        selected: false
+        selected: false,
+        canDeselect: false
       }
     };
   },
@@ -19937,7 +20096,8 @@ var SmallStream = React.createClass({displayName: "SmallStream",
     e.preventDefault();
 
     // Call the passed-in click handler with the streamId
-    this.props.onChannelClick(this.props.data.streamId);
+    if (this.props.data.canDeselect || !this.props.data.selected)
+      this.props.onChannelClick(this.props.data.streamId);
   },
   
   render: function () {
@@ -19953,7 +20113,7 @@ var SmallStream = React.createClass({displayName: "SmallStream",
 
 module.exports = SmallStream;
 
-},{"react":156}],161:[function(require,module,exports){
+},{"react":156}],164:[function(require,module,exports){
 var React = require('react');
 
 var StatBar = React.createClass({displayName: "StatBar",
@@ -19967,63 +20127,218 @@ var StatBar = React.createClass({displayName: "StatBar",
       }
     };
   },
+  getInitialState: function () {
+    return {
+      width: 0,
+      mouseOver: false
+    }
+  },
+
+  componentDidMount: function () {
+    this.fillBar();
+  },
   
+  handleMouseOver: function () {
+    this.setState({ismouseOver: true});
+  },
+  handleMouseOut: function () {
+    this.setState({ismouseOver: false});
+  },
+  fillBar: function () {
+    var width = this.state.width;
+    // If the bar isn't full, keep animating
+    if (width < this.props.data.score*57) {
+      requestAnimationFrame(this.fillBar);
+      this.setState({width: width + 4});
+    }
+  },
   render: function () {
     // A representation of a given stat in a 'meter' format
+    var barStyle = {
+      width: this.state.width + 'px'
+    };
+
+    // Assigns the value of the bar's 'name' field based on mouseover
+    var label = this.state.ismouseOver ? this.props.data.initialValue : this.props.data.label;
     return (
-      React.createElement("div", {className: "statBar"}, 
+      React.createElement("div", {className: "statBarContainer", onMouseOver: this.handleMouseOver, 
+          onMouseOut: this.handleMouseOut}, 
         React.createElement("div", {className: "name"}, 
-          this.props.data.label
+          label
         ), 
-        React.createElement("div", {className: "score"}, 
-          this.props.data.score
-        ), 
-        React.createElement("div", {className: "initialValue"}, 
-          this.props.data.initialValue
+        React.createElement("div", {className: "statBar", style: barStyle}
         )
-      )
+      )     
     );
   }
 });
 
 module.exports = StatBar;
 
-},{"react":156}],162:[function(require,module,exports){
+},{"react":156}],165:[function(require,module,exports){
 var React = require('react');
+var GradeBubble = require('./GradeBubble.react')
 
 var StatGem = React.createClass({displayName: "StatGem",
   getDefaultProps: function () {
     return {
       data: {},
       // These are the default stats used to construct a gem. Could be overwritten
-      stats: ['viewers', 'fps', 'resolution', 'duration', 'starPower']
+      stats: ['viewers', 'fps', 'resolution', 'duration', 'starPower'],
+      guides: 'images/StatGemTransparent.png',
+      background: 'images/StatGemBackground.png',
+      onGemAnimationComplete: null
     };
   },
-  
+  getInitialState: function () {
+    // Our gem is 5 sided by default (based on images and props),
+    return {
+      // The (x,y) coordinates used to animate the stat gem
+      pathX: [],
+      pathY: [],
+      // The final (x,y) values for each label
+      finalX: [],
+      finalY: [],
+      animationComplete: false
+    };
+  },
+
+  componentDidMount: function () {
+    // In order to calculate starting at the top of the pentagon, note that pi/2
+    // is the top of the pentagon, and incrementing by (2*pi)/5 will result in the
+    // angle (in radians) of the next vertex
+    var angles = [];
+    var initial = Math.PI / 2;
+    var increment = (2 * Math.PI) / 5;
+
+    // We will need to use .5 the height/width to offset the clip path as if it was
+    // being drawn on a coordinate plane and not from the edge of the element
+    var node = React.findDOMNode(this.refs.stats);
+    var halfWidth = node.offsetWidth / 2;
+    var halfHeight = node.offsetHeight / 2;
+
+    // The starting points of the paths need to be in the center of the div
+    var pathX = [];
+    var pathY = [];
+
+    // Calculate the final values for the pentagon vertices
+    var finalX = [];
+    var finalY = [];   
+    for (var i=0; i < this.props.stats.length; i++) {
+      var key = this.props.stats[i];
+      var angle = initial + increment * i;
+
+      // The radius is scaled so the resulting animation can stretch to the edge of the pentagon
+      var radius = this.props.data[key].score * 20;
+      var x = this.calculateX(0, radius, angle);
+      var y = this.calculateY(0, radius, angle);
+
+      // Because clip path is used to draw this animation, the 'origin' of the path is the top-left
+      // of the div. As a result, all y coordinates will need to be negative to be interpreted
+      // as positive. Further, we need to apply an offset (half the relevant div dimension) 
+      // to all values so they are positioned as though the center of the div were their origin
+      finalX.push(x + halfWidth);
+      finalY.push(-y + halfHeight);
+      pathX.push(halfWidth);
+      pathY.push(halfHeight);
+    }
+
+    // Can't really avoid a re-render here while using state
+    this.setState({finalX: finalX, finalY: finalY, pathX: pathX, pathY: pathY, halfHeight: halfHeight, halfWidth: halfWidth}, function () {
+      // We don't want to begin animating until the state is updated
+      this.animatePath();
+    }.bind(this));   
+  },
+  componentWillUnmount: function () {
+    cancelAnimationFrame(this.animatePath);
+  },
+
+  // These functions return the X/Y coordinates for a given origin, radius, and angle
+  calculateX: function (originX, radius, angle) {
+    return originX + (radius * Math.cos(angle));
+  },
+  calculateY: function (originY, radius, angle) {
+    return originY + (radius * Math.sin(angle));
+  },
+  animatePath: function () {
+    // This will be responsible for animating in the clip-path for the stats
+    var complete = true;
+    var newPathX = [];
+    var newPathY = [];
+
+    // Increment these coordinates if they have not reached their final values
+    for (var i=0; i<this.props.stats.length; i++) {
+      var x = this.state.pathX[i];
+      var y = this.state.pathY[i];
+
+      var finalX = this.state.finalX[i];
+      if (this.state.halfWidth < finalX && x < finalX) {
+        x += 2;
+        complete = false;
+      } else if (this.state.halfWidth > finalX && x > finalX) {
+        x -= 2;
+        complete = false;
+      }
+
+      var finalY = this.state.finalY[i];
+      if (this.state.halfHeight < finalY && y < finalY) {    
+        y += 2;
+        complete = false;
+      } else if (this.state.halfHeight > finalY && y > finalY) {    
+        y -= 2;
+        complete = false;
+      }
+
+      // Push the values regardless of whether or not they were changed
+      newPathX.push(x);
+      newPathY.push(y);
+    }
+
+    this.setState({pathX: newPathX, pathY: newPathY, animationComplete: complete});
+
+    // Continue looping until the transition is final
+    if (!complete)
+      requestAnimationFrame(this.animatePath);
+    else
+      // If complete, signal that it is safe to unmount this component
+      this.props.onGemAnimationComplete();
+  },
   render: function () {
     // A representation of a set of 5 stats given in a 'gem' format
-    var facets = this.props.stats.map(function (key) {
-      var stat = this.props.data[key];
-      return (
-        React.createElement("div", {className: "facet"}, 
-          React.createElement("div", {className: "name"}, 
-            stat.label
-          ), 
-          React.createElement("div", {className: "score"}, 
-            stat.score
-          ), 
-          React.createElement("div", {className: "grade"}, 
-            stat.grade
-          ), 
-          React.createElement("div", {className: "initialValue"}, 
-            stat.initialValue
-          )
-        )
+    // This is the progress for the clip path animation. The first and last values will match
+    // in order to close the path.
+    var coordArray = [];
+    for (var i=0; i<this.props.stats.length; i++) {
+      var x = this.state.pathX[i] + 'px ';
+      var y = this.state.pathY[i] + 'px';
+      coordArray.push(x + y);
+    }
+
+    // Add the first value onto the end of the array as well, then convert to a string
+    coordArray.push(coordArray[0]);
+    var coordinates = coordArray.join(',');    
+    var statStyle = {
+      WebkitClipPath: 'polygon(' + coordinates + ')'
+    };
+
+    // Return grade bubbles
+    
+    var grades = this.props.stats.map(function (key, index) {
+      var data = this.props.data[key];
+      var className = 'bubble' + index;
+
+      return(
+        React.createElement(GradeBubble, {key: data.label, className: className, grade: data.grade, label: data.label})
       );
     }.bind(this));
     return (
       React.createElement("div", {className: "statGem"}, 
-        facets
+        React.createElement("img", {className: "gem", src: this.props.background}), 
+        React.createElement("div", {className: "gem stats", style: statStyle, ref: "stats"}), 
+        React.createElement("img", {className: "gem", src: this.props.guides}), 
+        React.createElement("div", {className: "gem gradeCont"}, 
+          grades
+        )
       )
     );
   }
@@ -20031,14 +20346,15 @@ var StatGem = React.createClass({displayName: "StatGem",
 
 module.exports = StatGem;
 
-},{"react":156}],163:[function(require,module,exports){
+},{"./GradeBubble.react":160,"react":156}],166:[function(require,module,exports){
 var React = require('react');
 var StreamDetail = require('./StreamDetail.react');
 
 var StreamComparer = React.createClass({displayName: "StreamComparer",
   getDefaultProps: function () {
     return {
-      data: [], 
+      data: [],
+      onGemAnimationComplete: null 
     };
   },
   
@@ -20049,9 +20365,10 @@ var StreamComparer = React.createClass({displayName: "StreamComparer",
       count++;
       var className = count == 1 ? 'right' : 'left';
       return (
-          React.createElement(StreamDetail, {className: className, key: streamData.id, data: streamData})
+          React.createElement(StreamDetail, {className: className, key: streamData.id, data: streamData, 
+          onGemAnimationComplete: this.props.onGemAnimationComplete})
       );
-    });
+    }.bind(this));
     return (
       React.createElement("div", {className: "streamComparer"}, 
         detailViews
@@ -20062,7 +20379,7 @@ var StreamComparer = React.createClass({displayName: "StreamComparer",
 
 module.exports = StreamComparer;
 
-},{"./StreamDetail.react":164,"react":156}],164:[function(require,module,exports){
+},{"./StreamDetail.react":167,"react":156}],167:[function(require,module,exports){
 var React = require('react');
 var StreamProfile = require('./StreamProfile.react');
 var StatBar = require('./StatBar.react');
@@ -20075,7 +20392,11 @@ var StreamDetail = React.createClass({displayName: "StreamDetail",
       className: 'right'
     };
   },
-  
+
+  handleGemAnimationComplete: function () {
+    // Pass the stream id up the chain
+    this.props.onGemAnimationComplete(this.props.data.id);
+  },
   render: function () {
     var className = 'streamDetail ' + this.props.className;
     return (
@@ -20083,7 +20404,7 @@ var StreamDetail = React.createClass({displayName: "StreamDetail",
         React.createElement(StreamProfile, {data: this.props.data}), 
         React.createElement(StatBar, {data: this.props.data.stats.views}), 
         React.createElement(StatBar, {data: this.props.data.stats.followers}), 
-        React.createElement(StatGem, {data: this.props.data.stats})
+        React.createElement(StatGem, {data: this.props.data.stats, onGemAnimationComplete: this.handleGemAnimationComplete})
       )
     );
   }
@@ -20091,7 +20412,7 @@ var StreamDetail = React.createClass({displayName: "StreamDetail",
 
 module.exports = StreamDetail;
 
-},{"./StatBar.react":161,"./StatGem.react":162,"./StreamProfile.react":166,"react":156}],165:[function(require,module,exports){
+},{"./StatBar.react":164,"./StatGem.react":165,"./StreamProfile.react":169,"react":156}],168:[function(require,module,exports){
 var React = require('react');
 var SmallStream = require('./SmallStream.react');
 
@@ -20119,7 +20440,7 @@ var StreamList = React.createClass({displayName: "StreamList",
 
 module.exports = StreamList;
 
-},{"./SmallStream.react":160,"react":156}],166:[function(require,module,exports){
+},{"./SmallStream.react":163,"react":156}],169:[function(require,module,exports){
 var React = require('react');
 var Indicator = require('./Indicator.react');
 
@@ -20131,22 +20452,23 @@ var StreamProfile = React.createClass({displayName: "StreamProfile",
   },
   
   render: function () {
-    // The text-centric piece of the StreamDetail view
+    // [Jankily] remove the http://www. from the url for display purposes
+    var shortUrl = this.props.data.url.slice(11, Number.MAX_VALUE);
     return (
       React.createElement("div", {className: "streamProfile"}, 
-        React.createElement("div", {className: "logo"}, 
-          React.createElement("img", {src: this.props.data.logo})
-        ), 
         React.createElement("div", {className: "name"}, 
           this.props.data.name
         ), 
+        React.createElement("div", {className: "logo"}, 
+          React.createElement("img", {src: this.props.data.logo})
+        ), 
         React.createElement("div", {className: "game"}, 
-          this.props.data.game
+          "playing ", this.props.data.game
         ), 
         React.createElement("div", {className: "url"}, 
-          this.props.data.url
+          "on ", React.createElement("a", {href: this.props.data.url}, shortUrl)
         ), 
-        React.createElement("div", null, 
+        React.createElement("div", {className: "indicatorContainer"}, 
           React.createElement(Indicator, {label: "Partner", active: this.props.data.partner}), 
           React.createElement(Indicator, {label: "Mature", active: this.props.data.mature})
         )
@@ -20157,4 +20479,4 @@ var StreamProfile = React.createClass({displayName: "StreamProfile",
 
 module.exports = StreamProfile;
 
-},{"./Indicator.react":158,"react":156}]},{},[157]);
+},{"./Indicator.react":161,"react":156}]},{},[157]);
