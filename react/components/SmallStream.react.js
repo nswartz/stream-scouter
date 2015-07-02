@@ -6,7 +6,8 @@ var SmallStream = React.createClass({
       data: {
         imgUrl: 'http://gaymerx.com/wp-content/uploads/2013/05/Question-Block.png',
         streamId: 0,
-        selected: false
+        selected: false,
+        canDeselect: false
       }
     };
   },
@@ -15,7 +16,8 @@ var SmallStream = React.createClass({
     e.preventDefault();
 
     // Call the passed-in click handler with the streamId
-    this.props.onChannelClick(this.props.data.streamId);
+    if (this.props.data.canDeselect || !this.props.data.selected)
+      this.props.onChannelClick(this.props.data.streamId);
   },
   
   render: function () {

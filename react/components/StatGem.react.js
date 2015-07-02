@@ -8,7 +8,8 @@ var StatGem = React.createClass({
       // These are the default stats used to construct a gem. Could be overwritten
       stats: ['viewers', 'fps', 'resolution', 'duration', 'starPower'],
       guides: 'images/StatGemTransparent.png',
-      background: 'images/StatGemBackground.png'
+      background: 'images/StatGemBackground.png',
+      onGemAnimationComplete: null
     };
   },
   getInitialState: function () {
@@ -20,8 +21,7 @@ var StatGem = React.createClass({
       // The final (x,y) values for each label
       finalX: [],
       finalY: [],
-      animationComplete: false,
-      mouseOver: ''
+      animationComplete: false
     };
   },
 
@@ -121,6 +121,9 @@ var StatGem = React.createClass({
     // Continue looping until the transition is final
     if (!complete)
       requestAnimationFrame(this.animatePath);
+    else
+      // If complete, signal that it is safe to unmount this component
+      this.props.onGemAnimationComplete();
   },
   render: function () {
     // A representation of a set of 5 stats given in a 'gem' format

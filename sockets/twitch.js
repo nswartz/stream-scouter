@@ -22,13 +22,9 @@ module.exports = function (io) {
     if (!twitchData)
       refreshData(40);    
     
-    // Refresh data when requested
-    socket.on('refresh data', function (msg) {
-      refreshData(msg.batchSize);
-    });
-    
-    socket.on('request update', function () {
-      twitchSocket.emit('update client', twitchData);
+    // Refresh data when requested    
+    socket.on('request update', function (batchSize) {
+      refreshData(batchSize);
     });
     
     // Pulls new data from Twitch
