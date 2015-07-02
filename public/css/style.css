@@ -26,14 +26,28 @@ a {
   line-height: 100px;
   text-align: center;
   border-radius: 20px;
+  cursor: pointer;
 }
   .appButton.Refresh {
     background-color: green;
     top: 40px;
     left: 40px;
   }
+  .appButton.Refresh.disabled {
+    background-color: darkslateblue;
+    cursor: default;
+    top: 40px;
+    left: 40px;
+  }
+  
   .appButton.Compare {
     background-color: red;
+    top: 40px;
+    right: 40px;
+  }
+  .appButton.Compare.disabled {
+    background-color: darkslateblue;
+    cursor: default;
     top: 40px;
     right: 40px;
   }

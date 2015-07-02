@@ -19830,12 +19830,23 @@ var AppButton = React.createClass({displayName: "AppButton",
       label: ''
     };
   },
+  getInitialState: function () {
+    return {
+      style: {}
+    }
+  },
 
   handleMouseDown: function (e) {
     e.preventDefault();
+    var style = {
+      boxShadow: 'inset 10px 10px 5px 0px rgba(0,0,0,0.45)'
+    }
+    this.setState({style: style});
   },
   handleMouseUp: function (e) {
     e.preventDefault();
+
+    this.setState({style: {}});
   },
   handleClick: function (e) {
     e.preventDefault();
@@ -19849,7 +19860,7 @@ var AppButton = React.createClass({displayName: "AppButton",
     var className = this.props.enabled ? 'appButton ' : 'appButton disabled ';
     className += this.props.label;
     return (
-      React.createElement("div", {className: className, onClick: this.handleClick, 
+      React.createElement("div", {className: className, style: this.state.style, onClick: this.handleClick, 
       onMouseDown: this.handleMouseDown, onMouseUp: this.handleMouseUp}, 
         this.props.label
       )
@@ -19885,7 +19896,7 @@ var CenterColumn = React.createClass({displayName: "CenterColumn",
       React.createElement("div", {className: "centerColumn"}, 
         React.createElement("div", {className: "appHeader"}, "Stream Scouter"), 
         React.createElement(AppButton, {label: "Refresh", enabled: this.props.refreshEnabled, onButtonClick: this.props.onRefreshClick}), 
-        React.createElement(AppButton, {label: "\"Compare\"", enabled: this.props.compareEnabled, onButtonClick: this.props.onCompareClick}), 
+        React.createElement(AppButton, {label: "Compare", enabled: this.props.compareEnabled, onButtonClick: this.props.onCompareClick}), 
         React.createElement(StreamList, {data: this.props.data, onChannelClick: this.props.onChannelClick})
       )    
     );
@@ -20069,7 +20080,7 @@ var ScouterApp = React.createClass({displayName: "ScouterApp",
       React.createElement("div", {className: "scouterApp"}, 
         React.createElement(StreamComparer, {data: compareData, onGemAnimationComplete: this.handleGemAnimationComplete}), 
         React.createElement(CenterColumn, {data: listData, onChannelClick: this.handleChannelClick, onRefreshClick: this.handleRefreshClick, 
-        refreshEnabled: this.state.refreshEnabled, compareEnabled: this.state.compareEnabled})
+        onCompareClick: this.handleCompareClick, refreshEnabled: this.state.refreshEnabled, compareEnabled: this.state.compareEnabled})
       )    
     );
   }

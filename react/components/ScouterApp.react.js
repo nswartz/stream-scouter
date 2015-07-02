@@ -99,7 +99,7 @@ var ScouterApp = React.createClass({
       <div className='scouterApp'>
         <StreamComparer data={compareData} onGemAnimationComplete={this.handleGemAnimationComplete} />
         <CenterColumn data={listData} onChannelClick={this.handleChannelClick} onRefreshClick={this.handleRefreshClick} 
-        refreshEnabled={this.state.refreshEnabled} compareEnabled={this.state.compareEnabled} />
+        onCompareClick={this.handleCompareClick} refreshEnabled={this.state.refreshEnabled} compareEnabled={this.state.compareEnabled} />
       </div>    
     );
   }
