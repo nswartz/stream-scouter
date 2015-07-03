@@ -19940,7 +19940,8 @@ var GradeBubble = React.createClass({displayName: "GradeBubble",
   render: function () {
     // Show label based on whether the mouse is over the element and if the user clicked the element
     var label = this.state.mouseOver ? this.state.clicked ? this.props.initialValue : this.props.label : this.props.grade;
-    var className = 'gradeBubble ' + this.props.className;
+    var className = this.state.mouseOver ? 'gradeBubble hover ' : 'gradeBubble ';
+    className += this.props.className;
 
     // Position element at the vertex provided
     var style = {
