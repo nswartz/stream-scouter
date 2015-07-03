@@ -10,7 +10,7 @@ To run locally:
 1. Add a new file in the root of the project called <b>config.js</b>. It should export an object as a module that has the properties:
 
   `twitchApiRoot= 'https://api.twitch.tv/kraken'`<br/>
-  `twitchClientId= <ClientId assigned Twitch>`
+  `twitchClientId= <ClientId assigned by Twitch>`
 
 2. Install all the dependencies with `npm install`.<br/>
 3. Run the app using either of `npm start` or `node bin/www`.
