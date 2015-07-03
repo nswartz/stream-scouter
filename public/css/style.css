@@ -161,6 +161,7 @@ a {
         0 2px 10px yellow,
         2px 0 10px yellow, 
         0 -2px 10px yellow;   
+      pointer-events: none;
     }
     .streamProfile .logo {
       text-align: center;  
@@ -277,6 +278,9 @@ a {
   border: black solid 5px;
   cursor: pointer;
 }
+  .gradeBubble.hover {
+    box-shadow: yellow 0 0 15px 5px;
+  }
   .gradeBubble.bubble0 {
     top: -5px;
     left: 141px;
